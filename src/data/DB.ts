@@ -18,7 +18,7 @@ export type Currency = {
   description: string;
 };
 
-export type ExhangeRate = {
+export type ExchangeRate = {
   from: Currency;
   to: Currency;
   rate: number;
@@ -26,7 +26,7 @@ export type ExhangeRate = {
 
 export class Database {
   private currencies = new BehaviorSubject<Currency[]>([]);
-  private exhangeRates = new BehaviorSubject<ExhangeRate[]>([]);
+  private exchangeRates = new BehaviorSubject<ExchangeRate[]>([]);
 
   addOrUpdateCurrency(currency: Currency) {
     const newValue = [...this.currencies.value];
@@ -45,8 +45,8 @@ export class Database {
     );
   }
 
-  addOrUpdateExchangeRate(rate: ExhangeRate) {
-    const newValue = [...this.exhangeRates.value];
+  addOrUpdateExchangeRate(rate: ExchangeRate) {
+    const newValue = [...this.exchangeRates.value];
     const result = newValue.find(
       (x) => x.from.name === rate.from.name && x.to.name === rate.to.name
     );
@@ -55,12 +55,12 @@ export class Database {
     } else {
       newValue.push(rate);
     }
-    this.exhangeRates.next(newValue);
+    this.exchangeRates.next(newValue);
   }
 
-  removeExchangeRate(rate: ExhangeRate) {
-    this.exhangeRates.next(
-      this.exhangeRates.value.filter(
+  removeExchangeRate(rate: ExchangeRate) {
+    this.exchangeRates.next(
+      this.exchangeRates.value.filter(
         (x) => x.from.name === rate.from.name && x.to.name === rate.to.name
       )
     );
@@ -68,6 +68,10 @@ export class Database {
 
   getCurrencies(): Observable<Currency[]> {
     return this.currencies;
+  }
+
+  getExchangeRates(): Observable<ExchangeRate[]> {
+    return this.exchangeRates;
   }
 }
 

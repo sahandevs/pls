@@ -110,7 +110,7 @@ export function SetupCurrencies() {
         <CurrencyItem key={currency.name} currency={currency} isNew={false} />
       ))}
       <CurrencyItem
-        key={`new_currency_item`}
+        key={`new_currency_item_${currencies.length}`}
         currency={{
           name: `New currency ${currencies.length + 1}`,
           description: "",

@@ -2,7 +2,7 @@ import React from "react";
 import { CssBaseline, Box, Button, Card } from "@material-ui/core";
 import { ExchangePage } from "./ExchangePage";
 import { SetupCurrencies } from "./SetupCurrencies";
-import { SetupExhangeRates } from "./SetupExchangeRates";
+import { SetupExchangeRates } from "./SetupExchangeRates";
 import { DBContext, CreateOrGetDefaultDatabase } from "./data/DB";
 
 type Page = "exchange" | "setup-currencies" | "setup-exhange-rates";
@@ -43,7 +43,7 @@ function App() {
           <Card>
             {page === "exchange" && <ExchangePage />}
             {page === "setup-currencies" && <SetupCurrencies />}
-            {page === "setup-exhange-rates" && <SetupExhangeRates />}
+            {page === "setup-exhange-rates" && <SetupExchangeRates />}
           </Card>
         </Box>
       </Box>
