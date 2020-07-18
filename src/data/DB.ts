@@ -1,8 +1,19 @@
+import { Observable, BehaviorSubject } from "rxjs";
+import React from "react";
+
+export const DBContext = React.createContext<Database | null>(null);
+
+export function useDBContext(): Database {
+  const result = React.useContext(DBContext);
+  if (result == null)
+    throw new Error("useDBContext used outside of the context");
+  return result;
+}
 export type Currency = {
   name: string;
   unit: string;
   isTime: boolean;
-  isGeneratable: boolean;
+  isSource: boolean;
   icon: string;
   description: string;
 };
@@ -14,33 +25,49 @@ export type ExhangeRate = {
 };
 
 export class Database {
-  private currencies: Currency[] = [];
-  private exhangeRates: ExhangeRate[] = [];
+  private currencies = new BehaviorSubject<Currency[]>([]);
+  private exhangeRates = new BehaviorSubject<ExhangeRate[]>([]);
 
   addOrUpdateCurrency(currency: Currency) {
-    const result = this.currencies.find(x => x === currency);
+    const newValue = [...this.currencies.value];
+    const result = newValue.find((x) => x.name === currency.name);
     if (result != null) {
       Object.assign(result, currency);
     } else {
-      this.currencies.push(currency);
+      newValue.push(currency);
     }
+    this.currencies.next(newValue);
   }
 
   removeCurrency(currency: Currency) {
-    this.currencies = this.currencies.filter((x) => x !== currency);
+    this.currencies.next(
+      this.currencies.value.filter((x) => x.name !== currency.name)
+    );
   }
 
   addOrUpdateExchangeRate(rate: ExhangeRate) {
-    const result = this.exhangeRates.find(x => x === rate);
+    const newValue = [...this.exhangeRates.value];
+    const result = newValue.find(
+      (x) => x.from.name === rate.from.name && x.to.name === rate.to.name
+    );
     if (result != null) {
       Object.assign(result, rate);
     } else {
-      this.exhangeRates.push(rate);
+      newValue.push(rate);
     }
+    this.exhangeRates.next(newValue);
   }
 
   removeExchangeRate(rate: ExhangeRate) {
-    this.exhangeRates = this.exhangeRates.filter((x) => x !== rate);
+    this.exhangeRates.next(
+      this.exhangeRates.value.filter(
+        (x) => x.from.name === rate.from.name && x.to.name === rate.to.name
+      )
+    );
+  }
+
+  getCurrencies(): Observable<Currency[]> {
+    return this.currencies;
   }
 }
 
@@ -51,7 +78,7 @@ export function CreateOrGetDefaultDatabase(): Database {
     icon: "code",
     description: "all codes related to 8 to 5 codes",
     name: "Job coding",
-    isGeneratable: true,
+    isSource: true,
     isTime: true,
     unit: "hr",
   };
@@ -60,7 +87,7 @@ export function CreateOrGetDefaultDatabase(): Database {
     icon: "code",
     description: "all codes non related to job like open source projects",
     name: "Hobby coding",
-    isGeneratable: true,
+    isSource: true,
     isTime: true,
     unit: "hr",
   };
@@ -69,7 +96,7 @@ export function CreateOrGetDefaultDatabase(): Database {
     icon: "videogame_asset",
     description: "round of any game like Valorant or LoL",
     name: "Game",
-    isGeneratable: false,
+    isSource: false,
     isTime: false,
     unit: "round",
   };
@@ -90,5 +117,5 @@ export function CreateOrGetDefaultDatabase(): Database {
     rate: 1,
   });
 
-  return new Database();
+  return db;
 }
