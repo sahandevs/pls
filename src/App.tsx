@@ -1,9 +1,14 @@
 import React from 'react';
+import { CssBaseline, Box } from '@material-ui/core';
 
 function App() {
   return (
-    <div className="App">
-    </div>
+    <>
+      <CssBaseline/>
+      <Box>
+
+      </Box>
+    </>
   );
 }
 
