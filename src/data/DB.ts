@@ -1,4 +1,5 @@
 import { Observable, BehaviorSubject } from "rxjs";
+import { map, take } from "rxjs/operators";
 import React from "react";
 
 export const DBContext = React.createContext<Database | null>(null);
@@ -24,9 +25,12 @@ export type ExchangeRate = {
   rate: number;
 };
 
+export type Bank = { [key: string]: number };
+
 export class Database {
   private currencies = new BehaviorSubject<Currency[]>([]);
   private exchangeRates = new BehaviorSubject<ExchangeRate[]>([]);
+  private bank = new BehaviorSubject<Bank>({});
 
   addOrUpdateCurrency(currency: Currency) {
     const newValue = [...this.currencies.value];
@@ -37,6 +41,53 @@ export class Database {
       newValue.push(currency);
     }
     this.currencies.next(newValue);
+  }
+
+  bankOf(currency: Currency): Observable<number> {
+    return this.bank.pipe(
+      map((bank) => {
+        return bank[currency.name] ?? 0;
+      })
+    );
+  }
+
+  canSpend(currency: Currency, value: number): Observable<boolean> {
+    return this.bankOf(currency).pipe(map((v) => v - value >= 0));
+  }
+
+  addToBank(currency: Currency, value: number) {
+    this.bank.next({
+      ...this.bank.value,
+      [currency.name]: Math.max(
+        0,
+        (this.bank.value[currency.name] ?? 0) + value
+      ),
+    });
+  }
+
+  exchange(exchangeRate: ExchangeRate, value: number) {
+    this.canExchange(exchangeRate, value)
+      .pipe(take(1))
+      .subscribe({
+        next: (canExchange) => {
+          if (canExchange) {
+            const newBank = { ...this.bank.value };
+            if (newBank[exchangeRate.from.name] == null) {
+              newBank[exchangeRate.from.name] = 0;
+            }
+            newBank[exchangeRate.from.name] -= value;
+            if (newBank[exchangeRate.to.name] == null) {
+              newBank[exchangeRate.to.name] = 0;
+            }
+            newBank[exchangeRate.to.name] += value * exchangeRate.rate;
+            this.bank.next(newBank);
+          }
+        },
+      });
+  }
+
+  canExchange(exchangeRate: ExchangeRate, value: number): Observable<boolean> {
+    return this.bankOf(exchangeRate.from).pipe(map((v) => v >= value));
   }
 
   removeCurrency(currency: Currency) {
