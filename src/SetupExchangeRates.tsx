@@ -1,10 +1,9 @@
 import React from "react";
-import { ExchangeRate, useDBContext, Currency } from "./data/DB";
+import { ExchangeRate, useDBContext } from "./data/DB";
 import { useObservable } from "./Utils";
 import {
   Box,
   Icon,
-  Checkbox,
   Button,
   TextField,
   Typography,
