@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject } from "rxjs";
-import { map, take } from "rxjs/operators";
+import { map, take, skip } from "rxjs/operators";
 import React from "react";
 
 export const DBContext = React.createContext<Database | null>(null);
@@ -28,6 +28,12 @@ export type ExchangeRate = {
 export type Bank = { [key: string]: number };
 
 export class Database {
+  constructor() {
+    this.currencies.pipe(skip(1)).subscribe({ next: () => this.save() });
+    this.exchangeRates.pipe(skip(1)).subscribe({ next: () => this.save() });
+    this.bank.pipe(skip(1)).subscribe({ next: () => this.save() });
+  }
+
   private currencies = new BehaviorSubject<Currency[]>([]);
   private exchangeRates = new BehaviorSubject<ExchangeRate[]>([]);
   private bank = new BehaviorSubject<Bank>({});
@@ -124,53 +130,26 @@ export class Database {
   getExchangeRates(): Observable<ExchangeRate[]> {
     return this.exchangeRates;
   }
+
+  load() {
+    const result = JSON.parse(localStorage.getItem("DATA") ?? "{}");
+    this.currencies.next(result["currencies"] ?? []);
+    this.exchangeRates.next(result["exchangeRates"] ?? []);
+    this.bank.next(result["bank"] ?? {});
+  }
+
+  save() {
+    const result = {
+      currencies: this.currencies.value,
+      exchangeRates: this.exchangeRates.value,
+      bank: this.bank.value,
+    };
+    localStorage.setItem("DATA", JSON.stringify(result));
+  }
 }
 
 export function CreateOrGetDefaultDatabase(): Database {
   const db = new Database();
-
-  const jobCoding: Currency = {
-    icon: "code",
-    description: "all codes related to 8 to 5 codes",
-    name: "Job coding",
-    isSource: true,
-    isTime: true,
-    unit: "hr",
-  };
-
-  const hobbyCodding: Currency = {
-    icon: "code",
-    description: "all codes non related to job like open source projects",
-    name: "Hobby coding",
-    isSource: true,
-    isTime: true,
-    unit: "hr",
-  };
-
-  const game: Currency = {
-    icon: "videogame_asset",
-    description: "round of any game like Valorant or LoL",
-    name: "Game",
-    isSource: false,
-    isTime: false,
-    unit: "round",
-  };
-
-  db.addOrUpdateCurrency(jobCoding);
-  db.addOrUpdateCurrency(hobbyCodding);
-  db.addOrUpdateCurrency(game);
-
-  db.addOrUpdateExchangeRate({
-    from: jobCoding,
-    to: game,
-    rate: 2,
-  });
-
-  db.addOrUpdateExchangeRate({
-    from: hobbyCodding,
-    to: game,
-    rate: 1,
-  });
-
+  db.load();
   return db;
 }
