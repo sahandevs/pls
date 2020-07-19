@@ -88,10 +88,46 @@ function SpendItem({ currency }: { currency: Currency }) {
   const db = useDBContext();
   const currentValue = useObservable(db.bankOf(currency), 0);
   const canSpend1 = useObservable(db.canSpend(currency, 1), false);
+  const exchangeRates = useObservable(db.getExchangeRates(), []).filter(
+    (x) => x.from.name === currency.name
+  );
+  const [anchorEl, setAnchorEl] = React.useState<Element | null>(null);
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
   return (
     <Card variant={"outlined"}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
         <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
+        {exchangeRates.length > 0 && (
+          <>
+            <Button
+              onClick={(event) => setAnchorEl(event.currentTarget)}
+              aria-controls="menu"
+              aria-haspopup="true"
+            >
+              {"Exchange"}
+            </Button>
+            <Menu
+              id="menu"
+              anchorEl={anchorEl}
+              keepMounted
+              open={anchorEl != null}
+              onClose={handleClose}
+            >
+              {exchangeRates
+                .filter((x) => x.from.name === currency.name)
+                .map((item) => (
+                  <ExchangeButton
+                    key={item.from.name + "_" + item.to.name}
+                    exchangeRate={item}
+                    value={1}
+                    onDone={handleClose}
+                  />
+                ))}
+            </Menu>
+          </>
+        )}
         <Button
           disabled={!canSpend1}
           onClick={() => db.addToBank(currency, -1)}
