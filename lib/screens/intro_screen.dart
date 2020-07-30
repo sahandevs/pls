@@ -13,6 +13,7 @@ class _IntroScreenState extends State<IntroScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       body: IntroLayout(
         child: Padding(
           padding: const EdgeInsets.all(15.0),

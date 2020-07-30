@@ -19,7 +19,12 @@ class IntroLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final mq = MediaQuery.of(context);
+    final keyboardPaddingSize = mq.viewInsets.bottom;
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 700),
+      curve: Curves.easeInOut,
+      padding: EdgeInsets.only(bottom: keyboardPaddingSize / 3),
       color: DesignConstants.backgroundColor,
       child: Center(
         child: Column(
