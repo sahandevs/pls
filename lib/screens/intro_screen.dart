@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pls/layouts/intro_layout.dart';
 import 'package:pls/theme/design_constants.dart';
 import 'package:pls/widgets/app_button.dart';
+import 'package:pls/widgets/intro_text_input.dart';
 
 class IntroScreen extends StatefulWidget {
   @override
@@ -13,11 +14,11 @@ class _IntroScreenState extends State<IntroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IntroLayout(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Text(
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            children: [
+              Text(
                 "Hi! do you mind telling me your name?",
                 style: TextStyle(
                   fontWeight: FontWeight.w100,
@@ -25,8 +26,9 @@ class _IntroScreenState extends State<IntroScreen> {
                   color: DesignConstants.textDefaultColor,
                 ),
               ),
-            ),
-          ],
+              IntroTextInput(),
+            ],
+          ),
         ),
         action: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15),

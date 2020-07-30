@@ -7,7 +7,7 @@ class DesignConstants {
   static Color secondaryColor = const Color.fromARGB(255, 146, 254, 157);
 
   static Color textDefaultColor = const Color.fromARGB(255, 172, 172, 172);
-  static Color textFocusColor = const Color.fromARGB(255, 172, 172, 172);
+  static Color textFocusColor = Colors.black;
 
   static Color userInputColor = const Color.fromARGB(255, 69, 129, 115);
 
