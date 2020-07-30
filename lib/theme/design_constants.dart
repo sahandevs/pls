@@ -34,5 +34,6 @@ class DesignConstants {
   );
 
   static Color modalBackground = Color.fromARGB(100, 0, 0, 0);
+  static Color backgroundColor = Colors.white;
 
 }
