@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pls/layouts/main_layout.dart';
 
 import 'layouts/intro_layout.dart';
 
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: IntroLayout(),
+      home: MainLayout(),
     );
   }
 }
