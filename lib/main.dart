@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pls/layouts/main_layout.dart';
+import 'package:pls/screens/intro_screen.dart';
 
 import 'layouts/intro_layout.dart';
 
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         fontFamily: 'Roboto',
       ),
-      home: MainLayout(),
+      home: IntroScreen(),
     );
   }
 }

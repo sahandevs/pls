@@ -20,7 +20,7 @@ class DesignConstants {
     end: Alignment.bottomRight,
   );
 
-  static Radius cornerRadius = const Radius.circular(12);
+  static BorderRadius borderRadius = BorderRadius.circular(12);
 
   static BoxShadow shadow = BoxShadow(
     color: const Color.fromARGB(255, 217, 217, 217),
