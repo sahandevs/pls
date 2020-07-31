@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:pls/theme/design_constants.dart';
 
 class IntroTextInput extends StatefulWidget {
+  final TextEditingController controller;
+
+  const IntroTextInput({Key key, this.controller}) : super(key: key);
   @override
   _IntroTextInputState createState() => _IntroTextInputState();
 }
@@ -10,6 +13,8 @@ class _IntroTextInputState extends State<IntroTextInput> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: widget.controller,
+      autofocus: true,
       autocorrect: false,
       style: TextStyle(
         fontWeight: FontWeight.w100,
