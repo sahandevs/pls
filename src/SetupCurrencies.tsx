@@ -8,7 +8,9 @@ import {
   Button,
   TextField,
   Typography,
+  Card,
 } from "@material-ui/core";
+import { useIsSmallScreen } from "./hooks/useIsSmallScreen";
 
 function CurrencyItem({
   currency,
@@ -26,7 +28,7 @@ function CurrencyItem({
   const [isSource, setIsSource] = React.useState(() => currency.isSource);
   const [isTime, setIsTime] = React.useState(() => currency.isTime);
   const [unit, setUnit] = React.useState(() => currency.unit);
-
+  const isSmallScreen = useIsSmallScreen();
   const isEdited =
     name !== currency.name ||
     icon !== currency.icon ||
@@ -35,14 +37,8 @@ function CurrencyItem({
     unit !== currency.unit ||
     isSource !== currency.isSource;
 
-  return (
-    <Box
-      display={"flex"}
-      flexDirection={"row"}
-      alignItems={"center"}
-      margin={1}
-      justifyContent={"space-between"}
-    >
+  const content = (
+    <>
       {!isNew && <Icon>{currency.icon}</Icon>}
       {isNew && (
         <TextField
@@ -97,6 +93,33 @@ function CurrencyItem({
           <Icon>{"delete"}</Icon>
         </Button>
       )}
+    </>
+  );
+
+  if (isSmallScreen)
+    return (
+      <Card style={{ margin: 1 }}>
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
+          padding={1}
+        >
+          {content}
+        </Box>
+      </Card>
+    );
+
+  return (
+    <Box
+      display={"flex"}
+      flexDirection={"row"}
+      alignItems={"center"}
+      margin={1}
+      justifyContent={"space-between"}
+    >
+      {content}
     </Box>
   );
 }
