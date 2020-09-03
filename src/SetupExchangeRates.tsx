@@ -11,7 +11,9 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Card,
 } from "@material-ui/core";
+import { useIsSmallScreen } from "./hooks/useIsSmallScreen";
 
 function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
   const db = useDBContext();
@@ -21,6 +23,7 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
   const [rateValue, setRateValue] = React.useState(
     () => rate?.rate.toString() ?? ""
   );
+  const isSmallScreen = useIsSmallScreen();
 
   const isEdited =
     from?.name !== rate?.from.name ||
@@ -32,14 +35,8 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
     to != null &&
     Number(rateValue) > 0;
 
-  return (
-    <Box
-      display={"flex"}
-      flexDirection={"row"}
-      alignItems={"center"}
-      margin={1}
-      justifyContent={"space-between"}
-    >
+  const content = (
+    <>
       <Box display={"flex"} flexDirection={"row"}>
         <FormControl>
           <InputLabel id="from-label-id">{"From"}</InputLabel>
@@ -120,6 +117,32 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
           </Button>
         )}
       </Box>
+    </>
+  );
+
+  if (isSmallScreen)
+    return (
+      <Card style={{ margin: 10 }}>
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          alignItems={"center"}
+          margin={1}
+        >
+          {content}
+        </Box>
+      </Card>
+    );
+
+  return (
+    <Box
+      display={"flex"}
+      flexDirection={"row"}
+      alignItems={"center"}
+      margin={1}
+      justifyContent={"space-between"}
+    >
+      {content}
     </Box>
   );
 }

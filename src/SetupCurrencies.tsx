@@ -98,7 +98,7 @@ function CurrencyItem({
 
   if (isSmallScreen)
     return (
-      <Card style={{ margin: 1 }}>
+      <Card style={{ margin: 15 }}>
         <Box
           display={"flex"}
           flexDirection={"column"}
