@@ -1,9 +1,9 @@
-import { Observable, BehaviorSubject } from "rxjs";
-import { map, take, skip } from "rxjs/operators";
+import { Observable, BehaviorSubject, combineLatest } from "rxjs";
+import { map, take, skip, distinct, debounceTime } from "rxjs/operators";
 import React from "react";
 
 export const DBContext = React.createContext<Database | null>(null);
-
+const firebase = (window as any).firebase;
 export function useDBContext(): Database {
   const result = React.useContext(DBContext);
   if (result == null)
@@ -29,9 +29,13 @@ export type Bank = { [key: string]: number };
 
 export class Database {
   constructor() {
-    this.currencies.pipe(skip(1)).subscribe({ next: () => this.save() });
-    this.exchangeRates.pipe(skip(1)).subscribe({ next: () => this.save() });
-    this.bank.pipe(skip(1)).subscribe({ next: () => this.save() });
+    combineLatest(
+      this.bank.pipe(skip(1), distinct()),
+      this.exchangeRates.pipe(skip(1), distinct()),
+      this.currencies.pipe(skip(1), distinct())
+    )
+      .pipe(debounceTime(1000))
+      .subscribe({ next: () => this.save() });
   }
 
   private currencies = new BehaviorSubject<Currency[]>([]);
@@ -131,11 +135,17 @@ export class Database {
     return this.exchangeRates;
   }
 
-  load() {
-    const result = JSON.parse(localStorage.getItem("DATA") ?? "{}");
-    this.currencies.next(result["currencies"] ?? []);
-    this.exchangeRates.next(result["exchangeRates"] ?? []);
-    this.bank.next(result["bank"] ?? {});
+  dbRef: any;
+
+  loadFromFirebase(uid: string) {
+    this.dbRef = firebase.database().ref(`sync_data/${uid}`);
+    this.dbRef.on("value", (s: any) => {
+      const result = JSON.parse(s.val() ?? "{}");
+      this.currencies.next(result["currencies"] ?? []);
+      this.exchangeRates.next(result["exchangeRates"] ?? []);
+      this.bank.next(result["bank"] ?? {});
+      console.log("Updating");
+    });
   }
 
   save() {
@@ -144,14 +154,31 @@ export class Database {
       exchangeRates: this.exchangeRates.value,
       bank: this.bank.value,
     };
-    localStorage.setItem("DATA", JSON.stringify(result));
+    this.dbRef.set(JSON.stringify(result));
+    console.log("Saving");
   }
 }
 
-// const firebase = (window as any).firebase;
+function getOrAskUser(key: string): string {
+  let value = localStorage.getItem(key);
+  if (value == null) {
+    value = prompt(key) ?? "";
+    localStorage.setItem(key, value);
+  }
+  return value;
+}
 
 export function CreateOrGetDefaultDatabase(): Database {
   const db = new Database();
-  db.load();
+  const username = getOrAskUser("username");
+  const password = getOrAskUser("password");
+  firebase
+    .auth()
+    .signInWithEmailAndPassword(username, password)
+    .then((r: any) => db.loadFromFirebase(r.user.uid))
+    .catch((e: any) => {
+      alert(e.message);
+      window.location.reload();
+    });
   return db;
 }
