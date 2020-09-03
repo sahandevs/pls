@@ -148,6 +148,8 @@ export class Database {
   }
 }
 
+// const firebase = (window as any).firebase;
+
 export function CreateOrGetDefaultDatabase(): Database {
   const db = new Database();
   db.load();
