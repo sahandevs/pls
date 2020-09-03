@@ -13,7 +13,7 @@ import { SetupExchangeRates } from "./SetupExchangeRates";
 import { DBContext, CreateOrGetDefaultDatabase } from "./data/DB";
 
 function App() {
-  const [page, setPage] = React.useState(0);
+  const [page, setPage] = React.useState(1);
   const db = React.useMemo(() => CreateOrGetDefaultDatabase(), []);
   return (
     <DBContext.Provider value={db}>

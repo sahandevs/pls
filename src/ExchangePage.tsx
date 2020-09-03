@@ -45,7 +45,7 @@ function ExchangeItem({ currency }: { currency: Currency }) {
   };
 
   return (
-    <Card variant={"outlined"}>
+    <Card variant={"outlined"} style={{margin: 3}}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
         <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
         <Button
@@ -96,7 +96,7 @@ function SpendItem({ currency }: { currency: Currency }) {
     setAnchorEl(null);
   };
   return (
-    <Card variant={"outlined"}>
+    <Card variant={"outlined"} style={{margin: 3}}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
         <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
         {exchangeRates.length > 0 && (
@@ -144,7 +144,7 @@ export function ExchangePage() {
   return (
     <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
       <Typography variant={"h5"}>{"Exchange"}</Typography>
-      <Box display={"flex"} flexWrap={"wrap"} flexDirection={"row"}>
+      <Box display={"flex"} flexWrap={"wrap"} flexDirection={"row"} justifyContent={"center"}>
         {currencies
           .filter((x) => x.isSource)
           .map((currency) => (
@@ -153,7 +153,7 @@ export function ExchangePage() {
       </Box>
       <Divider variant={"middle"} />
       <Typography variant={"h5"}>{"Spend"}</Typography>
-      <Box display={"flex"} flexWrap={"wrap"} flexDirection={"row"}>
+      <Box display={"flex"} flexWrap={"wrap"} flexDirection={"row"} justifyContent={"center"}>
         {currencies
           .filter((x) => !x.isSource)
           .map((currency) => (
