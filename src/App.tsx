@@ -23,7 +23,6 @@ function App() {
           value={page}
           onChange={(_, x) => setPage(x)}
           centered
-          centerRipple
         >
           <Tab label="Setup Currencies" />
           <Tab label="Exchange" />

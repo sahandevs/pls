@@ -10,21 +10,24 @@ import {
 } from "@material-ui/core";
 import { useDBContext, Currency, ExchangeRate } from "./data/DB";
 import { useObservable } from "./Utils";
-
-function ExchangeButton({
-  exchangeRate,
-  value,
-  onDone,
-}: {
+type ExchangeButtonBaseProps = {
   exchangeRate: ExchangeRate;
   value: number;
   onDone: () => void;
-}) {
+  innerRef: any;
+};
+function ExchangeButtonBase({
+  exchangeRate,
+  value,
+  onDone,
+  innerRef,
+}: ExchangeButtonBaseProps) {
   const db = useDBContext();
   const canExchange = useObservable(db.canExchange(exchangeRate, value), false);
   return (
     <MenuItem
       disabled={!canExchange}
+      innerRef={innerRef}
       onClick={() => {
         db.exchange(exchangeRate, value);
         onDone();
@@ -34,6 +37,10 @@ function ExchangeButton({
     } ${exchangeRate.to.unit} of ${exchangeRate.to.name}`}</MenuItem>
   );
 }
+
+const ExchangeButton = React.forwardRef((props: Omit<ExchangeButtonBaseProps, "innerRef">, ref) => (
+  <ExchangeButtonBase {...props} innerRef={ref} />
+));
 
 function ExchangeItem({ currency }: { currency: Currency }) {
   const db = useDBContext();
@@ -45,7 +52,7 @@ function ExchangeItem({ currency }: { currency: Currency }) {
   };
 
   return (
-    <Card variant={"outlined"} style={{margin: 3}}>
+    <Card variant={"outlined"} style={{ margin: 3 }}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
         <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
         <Button
@@ -96,7 +103,7 @@ function SpendItem({ currency }: { currency: Currency }) {
     setAnchorEl(null);
   };
   return (
-    <Card variant={"outlined"} style={{margin: 3}}>
+    <Card variant={"outlined"} style={{ margin: 3 }}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
         <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
         {exchangeRates.length > 0 && (
@@ -144,7 +151,12 @@ export function ExchangePage() {
   return (
     <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
       <Typography variant={"h5"}>{"Exchange"}</Typography>
-      <Box display={"flex"} flexWrap={"wrap"} flexDirection={"row"} justifyContent={"center"}>
+      <Box
+        display={"flex"}
+        flexWrap={"wrap"}
+        flexDirection={"row"}
+        justifyContent={"center"}
+      >
         {currencies
           .filter((x) => x.isSource)
           .map((currency) => (
@@ -153,7 +165,12 @@ export function ExchangePage() {
       </Box>
       <Divider variant={"middle"} />
       <Typography variant={"h5"}>{"Spend"}</Typography>
-      <Box display={"flex"} flexWrap={"wrap"} flexDirection={"row"} justifyContent={"center"}>
+      <Box
+        display={"flex"}
+        flexWrap={"wrap"}
+        flexDirection={"row"}
+        justifyContent={"center"}
+      >
         {currencies
           .filter((x) => !x.isSource)
           .map((currency) => (
