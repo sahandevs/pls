@@ -1,6 +1,6 @@
 import React from "react";
-import { ExchangeRate, useDBContext } from "./data/DB";
-import { useObservable } from "./Utils";
+import { ExchangeRate, useDBContext } from "../../data/DB";
+import { useObservable } from "../../Utils";
 import {
   Box,
   Icon,
@@ -13,7 +13,7 @@ import {
   Select,
   Card,
 } from "@material-ui/core";
-import { useIsSmallScreen } from "./hooks/useIsSmallScreen";
+import { useIsSmallScreen } from "../../hooks/useIsSmallScreen";
 
 function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
   const db = useDBContext();

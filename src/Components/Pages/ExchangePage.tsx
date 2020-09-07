@@ -8,8 +8,8 @@ import {
   MenuItem,
   Menu,
 } from "@material-ui/core";
-import { useDBContext, Currency, ExchangeRate } from "./data/DB";
-import { useObservable } from "./Utils";
+import { useDBContext, Currency, ExchangeRate } from "../../data/DB";
+import { useObservable } from "../../Utils";
 type ExchangeButtonBaseProps = {
   exchangeRate: ExchangeRate;
   value: number;

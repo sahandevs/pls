@@ -1,6 +1,6 @@
 import React from "react";
-import { Currency, useDBContext } from "./data/DB";
-import { useObservable } from "./Utils";
+import { Currency, useDBContext } from "../../data/DB";
+import { useObservable } from "../../Utils";
 import {
   Box,
   Icon,
@@ -10,7 +10,7 @@ import {
   Typography,
   Card,
 } from "@material-ui/core";
-import { useIsSmallScreen } from "./hooks/useIsSmallScreen";
+import { useIsSmallScreen } from "../../hooks/useIsSmallScreen";
 
 function CurrencyItem({
   currency,

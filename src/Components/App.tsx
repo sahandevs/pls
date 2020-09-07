@@ -7,10 +7,10 @@ import {
   Tab,
   Tabs,
 } from "@material-ui/core";
-import { ExchangePage } from "./ExchangePage";
-import { SetupCurrencies } from "./SetupCurrencies";
-import { SetupExchangeRates } from "./SetupExchangeRates";
-import { DBContext, CreateOrGetDefaultDatabase } from "./data/DB";
+import { ExchangePage } from "./Pages/ExchangePage";
+import { SetupCurrencies } from "./Pages/SetupCurrencies";
+import { SetupExchangeRates } from "./Pages/SetupExchangeRates";
+import { DBContext, CreateOrGetDefaultDatabase } from "../data/DB";
 
 function App() {
   const [page, setPage] = React.useState(1);
