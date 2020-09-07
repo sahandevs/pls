@@ -3,7 +3,7 @@ import { fromEvent, BehaviorSubject } from "rxjs";
 import { debounceTime } from "rxjs/operators";
 import Draggable from "react-draggable";
 import { makeStyles } from "@material-ui/styles";
-import { Position, Config } from "../../../data/SystemsDB";
+import { Config } from "../../../data/SystemsDB";
 const useStyles = makeStyles({
   rootContainer: {
     "&::-webkit-scrollbar": {
@@ -110,7 +110,7 @@ export function SystemsPage() {
       window.document.removeEventListener("wheel", onMouseWheel);
       sub.unsubscribe();
     };
-  }, [updateInnerRefStyle]);
+  }, [updateInnerRefStyle, config]);
 
   React.useLayoutEffect(() => {
     if (!isHoldingMouseMiddleButton) {
@@ -128,7 +128,7 @@ export function SystemsPage() {
     };
     document.addEventListener("mousemove", onMouseMove);
     return () => document.removeEventListener("mousemove", onMouseMove);
-  }, [isHoldingMouseMiddleButton, innerRef, updateInnerRefStyle]);
+  }, [isHoldingMouseMiddleButton, innerRef, updateInnerRefStyle, config]);
 
   // setup width and height
   React.useLayoutEffect(() => {
