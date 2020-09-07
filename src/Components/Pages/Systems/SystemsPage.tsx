@@ -1,9 +1,9 @@
 import * as React from "react";
-import { fromEvent } from "rxjs";
+import { fromEvent, BehaviorSubject } from "rxjs";
 import { debounceTime } from "rxjs/operators";
 import Draggable from "react-draggable";
 import { makeStyles } from "@material-ui/styles";
-import { Position } from "../../../data/SystemsDB";
+import { Position, Config } from "../../../data/SystemsDB";
 const useStyles = makeStyles({
   rootContainer: {
     "&::-webkit-scrollbar": {
@@ -39,16 +39,78 @@ function useIsHoldinMouseKey(keyCode: number): boolean {
   return isDown;
 }
 
+function calculateTransform({ zoomLevel, cameraPosition }: Config): string {
+  return `transform:translate(${cameraPosition.x}px,${cameraPosition.y}px) scale(${zoomLevel})`;
+}
+
 export function SystemsPage() {
   const containerRef = React.useRef<HTMLDivElement>();
   const innerRef = React.useRef<HTMLDivElement>();
   const styles = useStyles({});
   const [size, setSize] = React.useState({ width: 0, height: 0 });
   const isHoldingMouseMiddleButton = useIsHoldinMouseKey(1);
-  const cameraPos = React.useMemo<Position>(() => ({
-    x: 0,
-    y: 0,
-  }), []);
+  const [scale, setScale] = React.useState(1);
+  const config = React.useMemo<Config>(
+    () => ({
+      cameraPosition: {
+        x: 0,
+        y: 0,
+      },
+      zoomLevel: 1,
+    }),
+    []
+  );
+
+  const updateInnerRefStyle = React.useCallback(
+    (animate: boolean = false) => {
+      if (innerRef.current == null)
+        throw new Error("Unhandled situtation innerRef cannot be null here");
+      let value = calculateTransform(config);
+      const ANIMATION = ";transition: transform 100ms";
+      if (animate) {
+        innerRef.current.setAttribute(
+          "style",
+          innerRef.current.style + ANIMATION
+        );
+        value += ANIMATION;
+      }
+
+      innerRef.current.setAttribute("style", value);
+    },
+    [innerRef, config]
+  );
+
+  // on space reset zoom to 1
+  React.useEffect(() => {
+    const onKeyUp = (e: KeyboardEvent) => {
+      const SPACE_KEY_CODE = 32;
+      if (e.keyCode === SPACE_KEY_CODE) {
+        config.zoomLevel = 1;
+        updateInnerRefStyle(true);
+      }
+    };
+    window.document.addEventListener("keyup", onKeyUp);
+    return () => window.document.removeEventListener("keyup", onKeyUp);
+  }, [updateInnerRefStyle, config]);
+
+  // zoom
+  React.useEffect(() => {
+    const _doUpdateScale = new BehaviorSubject(null);
+    const sub = _doUpdateScale.pipe(debounceTime(100)).subscribe({
+      next: () => setScale(config.zoomLevel),
+    });
+    const onMouseWheel = (e: WheelEvent) => {
+      config.zoomLevel = Math.max(0.1, config.zoomLevel + e.deltaY * -0.0005);
+      console.log(config);
+      updateInnerRefStyle(true);
+      _doUpdateScale.next(null);
+    };
+    window.document.addEventListener("wheel", onMouseWheel);
+    return () => {
+      window.document.removeEventListener("wheel", onMouseWheel);
+      sub.unsubscribe();
+    };
+  }, [updateInnerRefStyle]);
 
   React.useLayoutEffect(() => {
     if (!isHoldingMouseMiddleButton) {
@@ -57,18 +119,16 @@ export function SystemsPage() {
     } else {
       document.body.style.cursor = "move";
     }
-    
+
     const onMouseMove = (e: MouseEvent) => {
-      cameraPos.x += e.movementX;
-      cameraPos.y += e.movementY;
+      config.cameraPosition.x += e.movementX;
+      config.cameraPosition.y += e.movementY;
       // we directly update innerRef attribute because of performance resaons
-      if (innerRef.current == null)
-        throw new Error("Unhandled situtation innerRef cannot be null here");
-      innerRef.current.setAttribute("style", `transform:translate(${cameraPos.x}px,${cameraPos.y}px)`)
+      updateInnerRefStyle();
     };
     document.addEventListener("mousemove", onMouseMove);
     return () => document.removeEventListener("mousemove", onMouseMove);
-  }, [isHoldingMouseMiddleButton, innerRef, cameraPos]);
+  }, [isHoldingMouseMiddleButton, innerRef, updateInnerRefStyle]);
 
   // setup width and height
   React.useLayoutEffect(() => {
@@ -100,14 +160,11 @@ export function SystemsPage() {
         overflow: "hidden",
       }}
     >
-      <div
-        ref={innerRef as any}
-        className={styles.innerContainer}
-      >
+      <div ref={innerRef as any} className={styles.innerContainer}>
         <Draggable
           handle=".handle"
           defaultPosition={{ x: 0, y: 0 }}
-          scale={1}
+          scale={scale}
           onStart={(e) => {
             // stops parent from receiving event
             e.stopPropagation();
