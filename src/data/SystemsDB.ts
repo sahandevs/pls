@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Observable, BehaviorSubject } from "rxjs";
+import { Observable, BehaviorSubject, combineLatest } from "rxjs";
+import { distinct, map } from "rxjs/operators";
 
 export const SystemsDBContext = React.createContext<SystemsDB | null>(null);
 export function useSystemsDBContext(): SystemsDB {
@@ -46,37 +47,72 @@ export function toKey(obj: Goal | Connection | System): string {
 }
 
 export class SystemsDB {
-  private goals: Goal[] = [];
-  private connections: Connection[] = [];
-  private systems: System[] = [];
-  private config: Config = {
+  private goals = new BehaviorSubject<BehaviorSubject<Goal>[]>([]);
+  private connections = new BehaviorSubject<BehaviorSubject<Connection>[]>([]);
+  private systems = new BehaviorSubject<BehaviorSubject<System>[]>([]);
+  private config = new BehaviorSubject({
     zoomLevel: 1,
-    cameraPosition: {x:0, y:0},
-  };
+    cameraPosition: { x: 0, y: 0 },
+  });
+
+  constructor() {
+    const testGoal1 = new BehaviorSubject({
+      name: "This is a test goal",
+      bounds: {
+        height: 300,
+        width: 100,
+        left: 300,
+        top: 300,
+      },
+      labels: ["Label1"],
+    });
+    this.goals.next([testGoal1]);
+  }
 
   getZoomLevel(): Observable<number> {
-    return new BehaviorSubject(1);
+    return this.config.pipe(
+      distinct(),
+      map((x) => x.zoomLevel)
+    );
   }
 
   getCameraPosition(): Observable<Position> {
-    throw new Error("Not implemented");
+    return this.config.pipe(
+      distinct(),
+      map((x) => x.cameraPosition)
+    );
+  } //
+
+  getGoalsWithKey(): Observable<[Observable<Goal>, string][]> {
+    return this.goals.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
   }
 
-  getGoals(): Observable<Observable<Goal>[]> {
-    throw new Error("Not implemented");
+  getConnectionsWithKeys(): Observable<[Observable<Connection>, string][]> {
+    return this.connections.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
   }
 
-  getConnections(): Observable<Observable<Connection>[]> {
-    throw new Error("Not implemented");
+  getSystemGoals(_system: System): Observable<Observable<Goal>[]> {
+    const sysSubject = this.systems.value.find(
+      (x) => x.value.name === _system.name
+    );
+    if (sysSubject == null) throw new Error("System not found");
+    throw combineLatest(sysSubject, this.goals).pipe(
+      map(([system]) => {
+        return this.goals.value.filter((x) =>
+          isBoundAinY(x.value.bounds, system.bounds)
+        );
+      })
+    );
   }
+}
 
-  getSystemParent(system: System): Observable<System | undefined> {
-    throw new Error("Not implemented");
-  }
+function isBoundAinY(a: Rect, b: Rect): boolean {
+  if (a.left >= b.left) return false;
+  if (a.top <= b.top) return false;
+  if (a.left + a.width >= b.left + b.width) return false;
+  if (a.top + a.height >= b.height + b.height) return false;
 
-  getSystemGoals(system: System): Observable<Observable<Goal>[]> {
-    throw new Error("Not implemented");
-  }
+  return true;
 }
 
 export function CreateOrGetDefaultSystemsDatabase(): SystemsDB {

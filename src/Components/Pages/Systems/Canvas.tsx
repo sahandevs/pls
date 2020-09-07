@@ -15,7 +15,6 @@ const useStyles = makeStyles({
     width: "100%",
     // TODO: max everyhing height + padding
     height: "100%",
-    backgroundColor: "purple",
     position: "relative",
   },
 });
@@ -150,10 +149,10 @@ export function Canvas(props: React.Props<{}>) {
     <div
       ref={containerRef as any}
       className={styles.rootContainer}
+      id="canvas"
       style={{
         width: size.width,
         height: size.height,
-        backgroundColor: "blue",
         position: "relative",
         overflow: "hidden",
       }}

@@ -13,8 +13,9 @@ export function useObservable<T>(
       },
     });
     return () => sub.unsubscribe();
-  }, [obs]);
-
+    // TODO: it doens't support when obs changes
+    // eslint-disable-next-line
+  }, []);
   return value;
 }
 
