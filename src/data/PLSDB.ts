@@ -159,26 +159,7 @@ export class PLSDatabase {
   }
 }
 
-function getOrAskUser(key: string): string {
-  let value = localStorage.getItem(key);
-  if (value == null) {
-    value = prompt(key) ?? "";
-    localStorage.setItem(key, value);
-  }
-  return value;
-}
-
-export function CreateOrGetDefaultDatabase(): { pls: PLSDatabase } {
+export function CreateOrGetDefaultPLSDatabase(): PLSDatabase {
   const db = new PLSDatabase();
-  const username = getOrAskUser("username");
-  const password = getOrAskUser("password");
-  firebase
-    .auth()
-    .signInWithEmailAndPassword(username, password)
-    .then((r: any) => db.loadFromFirebase(r.user.uid))
-    .catch((e: any) => {
-      alert(e.message);
-      window.location.reload();
-    });
-  return { pls: db };
+  return db;
 }

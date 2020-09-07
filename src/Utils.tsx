@@ -17,3 +17,12 @@ export function useObservable<T>(
 
   return value;
 }
+
+export function getOrAskUser(key: string): string {
+  let value = localStorage.getItem(key);
+  if (value == null) {
+    value = prompt(key) ?? "";
+    localStorage.setItem(key, value);
+  }
+  return value;
+}
