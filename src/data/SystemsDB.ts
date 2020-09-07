@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Observable } from "rxjs";
+import { Observable, BehaviorSubject } from "rxjs";
 
 export const SystemsDBContext = React.createContext<SystemsDB | null>(null);
 export function useSystemsDBContext(): SystemsDB {
@@ -55,7 +55,7 @@ export class SystemsDB {
   };
 
   getZoomLevel(): Observable<number> {
-    throw new Error("Not implemented");
+    return new BehaviorSubject(1);
   }
 
   getCameraPosition(): Observable<Position> {
