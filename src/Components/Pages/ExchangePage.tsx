@@ -8,7 +8,7 @@ import {
   MenuItem,
   Menu,
 } from "@material-ui/core";
-import { useDBContext, Currency, ExchangeRate } from "../../data/DB";
+import { usePLSDBContext, Currency, ExchangeRate } from "../../data/PLSDB";
 import { useObservable } from "../../Utils";
 type ExchangeButtonBaseProps = {
   exchangeRate: ExchangeRate;
@@ -22,7 +22,7 @@ function ExchangeButtonBase({
   onDone,
   innerRef,
 }: ExchangeButtonBaseProps) {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const canExchange = useObservable(db.canExchange(exchangeRate, value), false);
   return (
     <MenuItem
@@ -43,7 +43,7 @@ const ExchangeButton = React.forwardRef((props: Omit<ExchangeButtonBaseProps, "i
 ));
 
 function ExchangeItem({ currency }: { currency: Currency }) {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const exchangeRates = useObservable(db.getExchangeRates(), []);
   const currentValue = useObservable(db.bankOf(currency), 0);
   const [anchorEl, setAnchorEl] = React.useState<Element | null>(null);
@@ -92,7 +92,7 @@ function ExchangeItem({ currency }: { currency: Currency }) {
 }
 
 function SpendItem({ currency }: { currency: Currency }) {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const currentValue = useObservable(db.bankOf(currency), 0);
   const canSpend1 = useObservable(db.canSpend(currency, 1), false);
   const exchangeRates = useObservable(db.getExchangeRates(), []).filter(
@@ -145,7 +145,7 @@ function SpendItem({ currency }: { currency: Currency }) {
 }
 
 export function ExchangePage() {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const currencies = useObservable(db.getCurrencies(), []);
 
   return (

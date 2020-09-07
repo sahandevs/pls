@@ -1,5 +1,5 @@
 import React from "react";
-import { Currency, useDBContext } from "../../data/DB";
+import { Currency, usePLSDBContext } from "../../data/PLSDB";
 import { useObservable } from "../../Utils";
 import {
   Box,
@@ -19,7 +19,7 @@ function CurrencyItem({
   currency: Currency;
   isNew: boolean;
 }) {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const [name, setName] = React.useState(() => currency.name);
   const [icon, setIcon] = React.useState(() => currency.icon);
   const [description, setDescription] = React.useState(
@@ -125,7 +125,7 @@ function CurrencyItem({
 }
 
 export function SetupCurrencies() {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const currencies = useObservable(db.getCurrencies(), []);
   return (
     <Box display={"flex"} flexDirection={"column"}>

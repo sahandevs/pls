@@ -3,14 +3,14 @@ import { CssBaseline, Box, Card, AppBar, Tab, Tabs } from "@material-ui/core";
 import { ExchangePage } from "./Pages/ExchangePage";
 import { SetupCurrencies } from "./Pages/SetupCurrencies";
 import { SetupExchangeRates } from "./Pages/SetupExchangeRates";
-import { DBContext, CreateOrGetDefaultDatabase } from "../data/DB";
+import { PLSDBContext, CreateOrGetDefaultDatabase } from "../data/PLSDB";
 import { SystemsPage } from "./Pages/Systems/SystemsPage";
 
 function App() {
   const [page, setPage] = React.useState(3);
   const db = React.useMemo(() => CreateOrGetDefaultDatabase(), []);
   return (
-    <DBContext.Provider value={db}>
+    <PLSDBContext.Provider value={db.pls}>
       <CssBaseline />
       <AppBar position="static">
         <Tabs value={page} onChange={(_, x) => setPage(x)} centered>
@@ -30,7 +30,7 @@ function App() {
           </Card>
         </Box>
       )}
-    </DBContext.Provider>
+    </PLSDBContext.Provider>
   );
 }
 

@@ -2,10 +2,10 @@ import { Observable, BehaviorSubject, combineLatest } from "rxjs";
 import { map, take, skip, distinct, debounceTime } from "rxjs/operators";
 import React from "react";
 
-export const DBContext = React.createContext<Database | null>(null);
+export const PLSDBContext = React.createContext<PLSDatabase | null>(null);
 const firebase = (window as any).firebase;
-export function useDBContext(): Database {
-  const result = React.useContext(DBContext);
+export function usePLSDBContext(): PLSDatabase {
+  const result = React.useContext(PLSDBContext);
   if (result == null)
     throw new Error("useDBContext used outside of the context");
   return result;
@@ -27,7 +27,7 @@ export type ExchangeRate = {
 
 export type Bank = { [key: string]: number };
 
-export class Database {
+export class PLSDatabase {
   constructor() {
     combineLatest(
       this.bank.pipe(skip(1), distinct()),
@@ -168,8 +168,8 @@ function getOrAskUser(key: string): string {
   return value;
 }
 
-export function CreateOrGetDefaultDatabase(): Database {
-  const db = new Database();
+export function CreateOrGetDefaultDatabase(): { pls: PLSDatabase } {
+  const db = new PLSDatabase();
   const username = getOrAskUser("username");
   const password = getOrAskUser("password");
   firebase
@@ -180,5 +180,5 @@ export function CreateOrGetDefaultDatabase(): Database {
       alert(e.message);
       window.location.reload();
     });
-  return db;
+  return { pls: db };
 }

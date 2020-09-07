@@ -1,5 +1,5 @@
 import React from "react";
-import { ExchangeRate, useDBContext } from "../../data/DB";
+import { ExchangeRate, usePLSDBContext } from "../../data/PLSDB";
 import { useObservable } from "../../Utils";
 import {
   Box,
@@ -16,7 +16,7 @@ import {
 import { useIsSmallScreen } from "../../hooks/useIsSmallScreen";
 
 function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const currencies = useObservable(db.getCurrencies(), []);
   const [from, setFrom] = React.useState(() => rate?.from);
   const [to, setTo] = React.useState(() => rate?.to);
@@ -148,7 +148,7 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
 }
 
 export function SetupExchangeRates() {
-  const db = useDBContext();
+  const db = usePLSDBContext();
   const rates = useObservable(db.getExchangeRates(), []);
   return (
     <Box display={"flex"} flexDirection={"column"}>
