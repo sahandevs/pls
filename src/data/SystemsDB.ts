@@ -33,16 +33,34 @@ export type System = {
   bounds: Rect;
 };
 
+export type Position = { x: number; y: number };
+
+export type Config = {
+  zoomLevel: number;
+  cameraPosition: Position;
+};
+
 export function toKey(obj: Goal | Connection | System): string {
   if (obj["name"] != null) return obj["name"];
   return obj["from"] + ":" + obj["to"];
 }
 
 export class SystemsDB {
-
   private goals: Goal[] = [];
   private connections: Connection[] = [];
   private systems: System[] = [];
+  private config: Config = {
+    zoomLevel: 1,
+    cameraPosition: {x:0, y:0},
+  };
+
+  getZoomLevel(): Observable<number> {
+    throw new Error("Not implemented");
+  }
+
+  getCameraPosition(): Observable<Position> {
+    throw new Error("Not implemented");
+  }
 
   getGoals(): Observable<Observable<Goal>[]> {
     throw new Error("Not implemented");
@@ -59,7 +77,6 @@ export class SystemsDB {
   getSystemGoals(system: System): Observable<Observable<Goal>[]> {
     throw new Error("Not implemented");
   }
-
 }
 
 export function CreateOrGetDefaultSystemsDatabase(): SystemsDB {
