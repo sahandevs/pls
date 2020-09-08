@@ -94,8 +94,21 @@ export class SystemsDB {
   updateGoalWithKey(key: string, updated: (current: Goal) => Goal) {
     const result = this.goals.value.find((x) => toKey(x.value) === key);
     if (result == null) throw new Error("goal not found");
-    result.next(updated(result.value));
-    this._forceUpdate.next(null);
+    const newValue = updated(result.value);
+    if (
+      this.goals.value.find((x) => toKey(x.value) === toKey(newValue) && x !== result) != null
+    ) {
+      alert("There is already another goal with this name");
+      return;
+    } else {
+      result.next(newValue);
+      this._forceUpdate.next(null);
+    }
+  }
+
+  deleteGoal(key: string) {
+    this.goals.next(this.goals.value.filter(x => toKey(x.value) !== key));
+    // TODO: update connections
   }
 
   getZoomLevel(): Observable<number> {
@@ -122,10 +135,11 @@ export class SystemsDB {
 
   getSystemGoals(_system: System): Observable<Observable<Goal>[]> {
     const sysSubject = this.systems.value.find(
-      (x) => x.value.name === _system.name
+      (x) => toKey(x.value) === toKey(_system)
     );
     if (sysSubject == null) throw new Error("System not found");
-    throw combineLatest(sysSubject, this.goals).pipe(
+    // TODO: this implementation doesn't work when a goal itself moves
+    return combineLatest(sysSubject, this.goals).pipe(
       map(([system]) => {
         return this.goals.value.filter((x) =>
           isBoundAinY(x.value.bounds, system.bounds)
