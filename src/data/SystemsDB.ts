@@ -86,13 +86,13 @@ export class SystemsDB {
   }
 
   getGoalInitialValue(key: string): Goal {
-    const result = this.goals.value.find((x) => x.value.name === key)?.value;
+    const result = this.goals.value.find((x) => toKey(x.value) === key)?.value;
     if (result == null) throw new Error("goal not found");
     return result;
   }
 
   updateGoalWithKey(key: string, updated: (current: Goal) => Goal) {
-    const result = this.goals.value.find((x) => x.value.name === key);
+    const result = this.goals.value.find((x) => toKey(x.value) === key);
     if (result == null) throw new Error("goal not found");
     result.next(updated(result.value));
     this._forceUpdate.next(null);
