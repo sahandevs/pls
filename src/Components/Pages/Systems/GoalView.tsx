@@ -37,6 +37,9 @@ export function GoalView(props: GoalProps) {
             width: bounds.width,
             height: bounds.height,
             userSelect: "none",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between"
           }}
         >
           <Icon className="handle">{"drag_handle"}</Icon>
@@ -47,13 +50,14 @@ export function GoalView(props: GoalProps) {
               flexWrap: "wrap",
               alignItems: "baseline",
               fontSize: 30,
+              alignSelf: "center"
             }}
             className="content"
             dangerouslySetInnerHTML={{ __html: goal.name }}
           ></div>
           <Box display="flex" flexDirection="row" flexWrap="warp">
             {goal.labels.map((label, i) => (
-              <Chip size="small" key={i} label={label} />
+              <Chip style={{margin: 3}} size="small" key={i} label={label} />
             ))}
           </Box>
         </Card>
