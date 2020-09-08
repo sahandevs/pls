@@ -76,6 +76,10 @@ export function Canvas(props: React.Props<{}>) {
   );
 
   React.useEffect(() => {
+    updateInnerRefStyle(false);
+  }, [updateInnerRefStyle]);
+
+  React.useEffect(() => {
     // skip default value and wait for server value
     const sub = db.config.pipe(skip(1), take(1)).subscribe({
       next: (v) => {
