@@ -48,6 +48,7 @@ export function toKey(obj: Goal | Connection | System): string {
 }
 
 export class SystemsDB {
+  private _forceUpdate = new BehaviorSubject(null);
   private goals = new BehaviorSubject<BehaviorSubject<Goal>[]>([]);
   private connections = new BehaviorSubject<BehaviorSubject<Connection>[]>([]);
   private systems = new BehaviorSubject<BehaviorSubject<System>[]>([]);
@@ -77,10 +78,24 @@ export class SystemsDB {
         skip(1),
         map((x) => JSON.stringify(x)),
         distinct()
-      )
+      ),
+      this._forceUpdate
     )
       .pipe(debounceTime(1000))
       .subscribe({ next: () => this.save() });
+  }
+
+  getGoalInitialValue(key: string): Goal {
+    const result = this.goals.value.find((x) => x.value.name === key)?.value;
+    if (result == null) throw new Error("goal not found");
+    return result;
+  }
+
+  updateGoalWithKey(key: string, updated: (current: Goal) => Goal) {
+    const result = this.goals.value.find((x) => x.value.name === key);
+    if (result == null) throw new Error("goal not found");
+    result.next(updated(result.value));
+    this._forceUpdate.next(null);
   }
 
   getZoomLevel(): Observable<number> {

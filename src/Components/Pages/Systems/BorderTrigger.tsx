@@ -116,7 +116,7 @@ export function BorderTrigger(props: {
           onMouseUp={props.onMouseUp}
           style={{ ...vLineStyle, cursor: "w-resize" }}
         ></div>
-        <div>{props.children}</div>
+        <div style={{width: "100%", height: "100%"}}>{props.children}</div>
         <div
           onMouseEnter={
             props.onR == null

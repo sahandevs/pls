@@ -1,5 +1,6 @@
 import { Observable } from "rxjs";
 import React from "react";
+import { distinct } from "rxjs/operators";
 export function useObservable<T>(
   obs: Observable<T> | (() => Observable<T>),
   defaultValue: T
@@ -7,7 +8,7 @@ export function useObservable<T>(
   const [value, setValue] = React.useState(defaultValue);
   React.useEffect(() => {
     const _obs = typeof obs === "function" ? obs() : obs;
-    const sub = _obs.subscribe({
+    const sub = _obs.pipe(distinct()).subscribe({
       next: (v) => {
         setValue(v);
       },
@@ -30,6 +31,6 @@ export function getOrAskUser(key: string): string {
 
 export function useForceUpdate(): VoidFunction {
   const [, setVal] = React.useState(0);
-  const cb = React.useCallback(() => setVal(c => c + 1),[]);
+  const cb = React.useCallback(() => setVal((c) => c + 1), []);
   return cb;
 }

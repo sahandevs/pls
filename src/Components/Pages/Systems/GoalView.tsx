@@ -1,12 +1,14 @@
 import * as React from "react";
 import { Card, Icon, Box, Chip } from "@material-ui/core";
 import { Observable } from "rxjs";
-import { CanvasNode } from "./CanvasNode";
-import { Goal } from "../../../data/SystemsDB";
+import { map } from "rxjs/operators";
+import { CanvasNode, UpdateManager } from "./CanvasNode";
+import { Goal, useSystemsDBContext } from "../../../data/SystemsDB";
 import { useObservable } from "../../../Utils";
 
 type GoalProps = {
   goal: Observable<Goal>;
+  goalKey: string;
   scale: number;
   selectedGoal?: Goal;
   onClick: (goal: Goal) => void;
@@ -15,11 +17,16 @@ type GoalProps = {
 export function GoalView(props: GoalProps) {
   const goal = useObservable(props.goal, null);
   const isSelected = props.selectedGoal?.name === goal?.name;
-
+  const db = useSystemsDBContext();
+  const updateManager = React.useMemo<UpdateManager>(() => ({
+    sendUpdate: (v) => db.updateGoalWithKey(props.goalKey, (current) => ({...current, bounds: v})),
+    initial: db.getGoalInitialValue(props.goalKey).bounds,
+    updates: props.goal.pipe(map(v => v.bounds))
+  }), [props.goalKey, db, props.goal]);
   if (goal == null) return null;
 
   return (
-    <CanvasNode scale={props.scale}>
+    <CanvasNode updateManager={updateManager} scale={props.scale}>
       {(bounds) => (
         <Card
           onClick={() => props.onClick(goal)}

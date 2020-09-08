@@ -25,6 +25,7 @@ export function SystemsPage() {
               setSelectedGoal(undefined);
             }
           }}
+          goalKey={key}
           selectedGoal={selectedGoal}
         />
       ))}
