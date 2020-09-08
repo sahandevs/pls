@@ -57,7 +57,7 @@ export class SystemsDB {
 
   constructor() {
     const testGoal1 = new BehaviorSubject({
-      name: "This is a test goal",
+      name: "This is a test <h1>goal</h1>",
       bounds: {
         height: 300,
         width: 100,

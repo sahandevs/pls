@@ -19,6 +19,7 @@ function GoalView(props: GoalProps) {
   const goal = useObservable(props.goal, null);
   const isSelected = props.selectedGoal?.name === goal?.name;
   const isHoldingBorder = React.useRef(false);
+  const containerRef = React.useRef<HTMLDivElement>();
   const [bounds, setBounds] = React.useState<Rect>(() => ({
     width: goal?.bounds?.width ?? 100,
     height: goal?.bounds?.height ?? 100,
@@ -32,53 +33,63 @@ function GoalView(props: GoalProps) {
   React.useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!isHoldingBorder.current) return;
-      const movementX = e.movementX;
-      const movementY = e.movementY;
+      const movementX = e.movementX * props.scale;
+      const movementY = e.movementY * props.scale;
+      const update = (calculate: (c: Rect) => Rect) => {
+        setBounds((c) => {
+          const result = calculate(c);
+          return {
+            ...result,
+            width: Math.max(result.width, 100),
+            height: Math.max(result.height, 70),
+          };
+        });
+      };
       if (lastBorderState.current === "r")
-        setBounds((c) => ({
+        update((c) => ({
           ...c,
           width: c.width + movementX,
         }));
       if (lastBorderState.current === "br")
-        setBounds((c) => ({
+        update((c) => ({
           ...c,
           width: c.width + movementX,
           height: c.height + movementY,
         }));
       if (lastBorderState.current === "b")
-        setBounds((c) => ({
+        update((c) => ({
           ...c,
           height: c.height + movementY,
         }));
-        if (lastBorderState.current === "bl")
-        setBounds((c) => ({
+      if (lastBorderState.current === "bl")
+        update((c) => ({
           ...c,
           width: c.width + -movementX,
           left: c.left + movementX,
           height: c.height + movementY,
         }));
-        if (lastBorderState.current === "l")
-        setBounds((c) => ({
+      if (lastBorderState.current === "l")
+        update((c) => ({
           ...c,
           width: c.width + -movementX,
           left: c.left + movementX,
         }));
-        if (lastBorderState.current === "tl")
-        setBounds((c) => ({
+      if (lastBorderState.current === "tl")
+        update((c) => ({
           ...c,
           width: c.width + -movementX,
           top: c.top + movementY,
           left: c.left + movementX,
           height: c.height + -movementY,
         }));
-        if (lastBorderState.current === "t")
-        setBounds((c) => ({
+      if (lastBorderState.current === "t")
+        update((c) => ({
           ...c,
           top: c.top + movementY,
           height: c.height + -movementY,
         }));
-        if (lastBorderState.current === "tr")
-        setBounds((c) => ({
+      if (lastBorderState.current === "tr")
+        update((c) => ({
           ...c,
           width: c.width + movementX,
           top: c.top + movementY,
@@ -94,7 +105,7 @@ function GoalView(props: GoalProps) {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     };
-  }, [isHoldingBorder, lastBorderState]);
+  }, [isHoldingBorder, lastBorderState, props.scale]);
 
   if (goal == null) return null;
 
@@ -109,16 +120,13 @@ function GoalView(props: GoalProps) {
       onStop={(e, d) => {
         setBounds((c) => ({
           ...c,
-          left:  d.x,
+          left: d.x,
           top: d.y,
         }));
-      
-      }
-        
-      }
+      }}
       scale={props.scale}
     >
-      <div style={{ position: "absolute" }}>
+      <div ref={containerRef as any} style={{ position: "absolute" }}>
         <BorderTrigger
           onMouseDown={onMouseDown}
           borderWidth={10}
@@ -155,11 +163,20 @@ function GoalView(props: GoalProps) {
               padding: 5,
               width: bounds.width,
               height: bounds.height,
-              userSelect: "none"
+              userSelect: "none",
             }}
           >
             <Icon className="handle">{"drag_handle"}</Icon>
-            {goal.name}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "baseline",
+              }}
+              className="content"
+              dangerouslySetInnerHTML={{ __html: goal.name }}
+            ></div>
           </Card>
         </BorderTrigger>
       </div>
