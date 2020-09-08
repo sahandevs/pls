@@ -111,6 +111,10 @@ export class SystemsDB {
     // TODO: update connections
   }
 
+  createGoal(goal: Goal) {
+    this.goals.next([...this.goals.value, new BehaviorSubject(goal)]);
+  }
+
   getZoomLevel(): Observable<number> {
     return this.config.pipe(
       distinct(),
