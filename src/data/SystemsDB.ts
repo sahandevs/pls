@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Observable, BehaviorSubject, combineLatest } from "rxjs";
-import { distinct, map } from "rxjs/operators";
+import { distinct, map, skip, debounceTime } from "rxjs/operators";
 
+const firebase = (window as any).firebase;
 export const SystemsDBContext = React.createContext<SystemsDB | null>(null);
 export function useSystemsDBContext(): SystemsDB {
   const result = React.useContext(SystemsDBContext);
@@ -56,17 +57,30 @@ export class SystemsDB {
   });
 
   constructor() {
-    const testGoal1 = new BehaviorSubject({
-      name: "This is a test <h1>goal</h1>",
-      bounds: {
-        height: 300,
-        width: 100,
-        left: 300,
-        top: 300,
-      },
-      labels: ["Label1"],
-    });
-    this.goals.next([testGoal1]);
+    combineLatest(
+      this.goals.pipe(
+        skip(1),
+        map((x) => JSON.stringify(x.map((x) => x.value))),
+        distinct()
+      ),
+      this.connections.pipe(
+        skip(1),
+        map((x) => JSON.stringify(x.map((x) => x.value))),
+        distinct()
+      ),
+      this.systems.pipe(
+        skip(1),
+        map((x) => JSON.stringify(x.map((x) => x.value))),
+        distinct()
+      ),
+      this.config.pipe(
+        skip(1),
+        map((x) => JSON.stringify(x)),
+        distinct()
+      )
+    )
+      .pipe(debounceTime(1000))
+      .subscribe({ next: () => this.save() });
   }
 
   getZoomLevel(): Observable<number> {
@@ -81,7 +95,7 @@ export class SystemsDB {
       distinct(),
       map((x) => x.cameraPosition)
     );
-  } //
+  }
 
   getGoalsWithKey(): Observable<[Observable<Goal>, string][]> {
     return this.goals.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
@@ -104,6 +118,128 @@ export class SystemsDB {
       })
     );
   }
+
+  dbRef: any;
+
+  loadFromFirebase(uid: string) {
+    this.dbRef = firebase.database().ref(`systems/${uid}`);
+    this.dbRef.on("value", (s: any) => {
+      console.log("Updating Systems");
+      const result = JSON.parse(s.val() ?? "{}");
+      const goals: Goal[] = result["goals"] ?? [];
+      const systems: System[] = result["systems"] ?? [];
+      const connections: Connection[] = result["connections"] ?? [];
+      const config: Config = result["config"] ?? {
+        zoomLevel: 1,
+        cameraPosition: { x: 0, y: 0 },
+      };
+      if (JSON.stringify(config) !== JSON.stringify(this.config.value))
+        this.config.next(config);
+      updateFromDiff(this.goals, goals);
+      updateFromDiff(this.systems, systems);
+      updateFromDiff(this.connections, connections);
+    });
+  }
+
+  save() {
+    const result = {
+      goals: this.goals.value.map((x) => x.value),
+      systems: this.systems.value.map((x) => x.value),
+      connections: this.connections.value.map((x) => x.value),
+      config: this.config.value,
+    };
+    this.dbRef.set(JSON.stringify(result));
+    console.log("Saving Systems");
+  }
+}
+
+type SystesmDBEntities = System | Goal | Connection;
+
+function updateFromDiff<T extends SystesmDBEntities>(
+  old: BehaviorSubject<BehaviorSubject<T>[]>,
+  _new: T[]
+) {
+  const indexedOldTargets: {
+    [key: string]: BehaviorSubject<T>;
+  } = {};
+  const oldTargets = old.value.map((v) => {
+    indexedOldTargets[toKey(v.value)] = v;
+    return v.value;
+  });
+
+  const targetsDiff = findDiff(oldTargets, _new);
+  const targetUpdateResult: BehaviorSubject<T>[] = [
+    ...targetsDiff.newAdded.map((x) => new BehaviorSubject(x)),
+  ];
+  targetsDiff.existed.forEach((item) => {
+    const _subject = indexedOldTargets[toKey(item)];
+    targetUpdateResult.push(_subject);
+    if (JSON.stringify(_subject) !== JSON.stringify(item)) {
+      _subject.next(item);
+    }
+  });
+  old.next(targetUpdateResult);
+}
+
+function findDiff<T extends SystesmDBEntities>(
+  _olds: T[],
+  news: T[]
+): {
+  newAdded: T[];
+  deleted: T[];
+  existed: T[];
+} {
+  const newAdded: T[] = [];
+  const existed: T[] = [];
+  outer: for (const _new of news) {
+    for (const _old of _olds) {
+      if (toKey(_old) === toKey(_new)) {
+        existed.push(_new);
+        continue outer;
+      }
+    }
+    newAdded.push(_new);
+  }
+  const deleted = _olds.filter(
+    (x) => !existed.map((x) => toKey(x)).includes(toKey(x))
+  );
+
+  return {
+    newAdded,
+    deleted,
+    existed,
+  };
+}
+
+if (process.env.NODE_ENV === "development") {
+  // TODO: add these to test
+  const _win = window as any;
+  const connSet1: any[] = [
+    {
+      name: "a",
+      labels: ["test1"],
+    },
+    {
+      name: "b",
+    },
+    {
+      name: "c",
+    },
+  ];
+  const connSet2: any[] = [
+    {
+      name: "a",
+      labels: [],
+    },
+
+    {
+      name: "c",
+    },
+    {
+      name: "k",
+    },
+  ];
+  _win.findDiff = () => findDiff(connSet1, connSet2);
 }
 
 function isBoundAinY(a: Rect, b: Rect): boolean {

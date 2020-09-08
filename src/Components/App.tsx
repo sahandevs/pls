@@ -22,15 +22,20 @@ function App() {
   React.useEffect(() => {
     const username = getOrAskUser("username");
     const password = getOrAskUser("password");
+    console.log(plsDb);
+    console.log(systemsDb);
     firebase
       .auth()
       .signInWithEmailAndPassword(username, password)
-      .then((r) => plsDb.loadFromFirebase(r.user.uid))
+      .then((r) => {
+        plsDb.loadFromFirebase(r.user.uid);
+        systemsDb.loadFromFirebase(r.user.uid);
+      })
       .catch((e) => {
         alert(e.message);
         window.location.reload();
       });
-  }, [plsDb]);
+  }, [plsDb, systemsDb]);
   return (
     <PLSDBContext.Provider value={plsDb}>
       <SystemsDBContext.Provider value={systemsDb}>
