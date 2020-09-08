@@ -24,16 +24,26 @@ function App() {
     const password = getOrAskUser("password");
     console.log(plsDb);
     console.log(systemsDb);
+    let didSetupDb = false;
+    const localUID = localStorage.getItem("uid");
+    const setupIfNeeded = (uid: string) => {
+      if (didSetupDb) return;
+      didSetupDb = true;
+
+      plsDb.loadFromFirebase(uid);
+      systemsDb.loadFromFirebase(uid);
+    };
+    if (localUID != null) setupIfNeeded(localUID);
     firebase
       .auth()
       .signInWithEmailAndPassword(username, password)
       .then((r) => {
-        plsDb.loadFromFirebase(r.user.uid);
-        systemsDb.loadFromFirebase(r.user.uid);
+        localStorage.setItem("uid", r.user.uid);
+        setupIfNeeded(r.user.uid);
       })
       .catch((e) => {
         alert(e.message);
-        window.location.reload();
+        if (localUID == null) window.location.reload();
       });
   }, [plsDb, systemsDb]);
   return (
