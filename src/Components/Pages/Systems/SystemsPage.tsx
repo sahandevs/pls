@@ -2,10 +2,11 @@ import * as React from "react";
 
 import Draggable from "react-draggable";
 import { Canvas } from "./Canvas";
-import { useSystemsDBContext, Goal } from "../../../data/SystemsDB";
+import { useSystemsDBContext, Goal, Rect } from "../../../data/SystemsDB";
 import { useObservable } from "../../../Utils";
-import { Card } from "@material-ui/core";
+import { Card, Icon } from "@material-ui/core";
 import { Observable } from "rxjs";
+import { BorderTrigger } from "./BorderTrigger";
 
 type GoalProps = {
   goal: Observable<Goal>;
@@ -18,95 +19,149 @@ function GoalView(props: GoalProps) {
   const goal = useObservable(props.goal, null);
   const isSelected = props.selectedGoal?.name === goal?.name;
   const isHoldingBorder = React.useRef(false);
-  const [size, setSize] = React.useState(() => ({
+  const [bounds, setBounds] = React.useState<Rect>(() => ({
     width: goal?.bounds?.width ?? 100,
     height: goal?.bounds?.height ?? 100,
+    left: 50,
+    top: 50,
   }));
+  const lastBorderState = React.useRef<
+    "tl" | "t" | "tr" | "l" | "r" | "br" | "b" | "bl" | "none"
+  >("none");
+
+  React.useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isHoldingBorder.current) return;
+      const movementX = e.movementX;
+      const movementY = e.movementY;
+      if (lastBorderState.current === "r")
+        setBounds((c) => ({
+          ...c,
+          width: c.width + movementX,
+        }));
+      if (lastBorderState.current === "br")
+        setBounds((c) => ({
+          ...c,
+          width: c.width + movementX,
+          height: c.height + movementY,
+        }));
+      if (lastBorderState.current === "b")
+        setBounds((c) => ({
+          ...c,
+          height: c.height + movementY,
+        }));
+        if (lastBorderState.current === "bl")
+        setBounds((c) => ({
+          ...c,
+          width: c.width + -movementX,
+          left: c.left + movementX,
+          height: c.height + movementY,
+        }));
+        if (lastBorderState.current === "l")
+        setBounds((c) => ({
+          ...c,
+          width: c.width + -movementX,
+          left: c.left + movementX,
+        }));
+        if (lastBorderState.current === "tl")
+        setBounds((c) => ({
+          ...c,
+          width: c.width + -movementX,
+          top: c.top + movementY,
+          left: c.left + movementX,
+          height: c.height + -movementY,
+        }));
+        if (lastBorderState.current === "t")
+        setBounds((c) => ({
+          ...c,
+          top: c.top + movementY,
+          height: c.height + -movementY,
+        }));
+        if (lastBorderState.current === "tr")
+        setBounds((c) => ({
+          ...c,
+          width: c.width + movementX,
+          top: c.top + movementY,
+          height: c.height + -movementY,
+        }));
+    };
+    const onMouseUp = (e: MouseEvent) => {
+      isHoldingBorder.current = false;
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isHoldingBorder, lastBorderState]);
 
   if (goal == null) return null;
 
-  const onMouseEnterBorder = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
-    const canvas = document.getElementById("canvas")!;
-    const canvasSize = canvas.getBoundingClientRect();
-    const mousePosInCanvasY = e.pageY - canvasSize.top;
-    // TODO: support camera change
-    // if mouse pos is between top and bottom we should use w-resize
-    if (
-      mousePosInCanvasY > goal.bounds.top &&
-      goal.bounds.top + goal.bounds.height > mousePosInCanvasY
-    ) {
-      document.body.style.cursor = "w-resize";
-    } else {
-      document.body.style.cursor = "n-resize";
-    }
-  };
-
-  const onMouseLeaveBorder = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
-    document.body.style.cursor = "default";
-  };
-
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     isHoldingBorder.current = true;
-    console.log("test");
-  };
-
-  const onMouseUp = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    isHoldingBorder.current = false;
-  };
-
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    e.persist();
-    if (!isHoldingBorder.current) return;
-    setSize((c) => ({
-      width: c.width + e.movementX,
-      height: c.height + e.movementY,
-    }));
   };
 
   return (
     <Draggable
       handle=".handle"
-      defaultPosition={{ x: goal.bounds.left, y: goal.bounds.top }}
+      position={{ x: bounds.left, y: bounds.top }}
+      onStop={(e, d) => {
+        setBounds((c) => ({
+          ...c,
+          left:  d.x,
+          top: d.y,
+        }));
+      
+      }
+        
+      }
       scale={props.scale}
-      disabled={!isSelected}
-      onStart={(e) => {
-        // stops parent from receiving event
-        e.stopPropagation();
-      }}
     >
-      <div
-        style={{
-          borderColor: "transparent",
-          borderStyle: "solid",
-          borderWidth: 5,
-          position: "absolute",
-          padding: 2,
-        }}
-        onMouseEnter={onMouseEnterBorder}
-        onMouseLeave={onMouseLeaveBorder}
-     
-        onMouseMove={onMouseMove}
-      >
-        <Card
-          onClick={() => props.onClick(goal)}
-          className="handle"
-          elevation={4}
-          variant={isSelected ? "elevation" : "outlined"}
+      <div style={{ position: "absolute" }}>
+        <BorderTrigger
           onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
-          style={{
-            padding: 5,
-            width: size.width,
-            height: size.height,
-            userSelect: "none",
-          }}
+          borderWidth={10}
+          onL={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "l")
+          }
+          onR={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "r")
+          }
+          onTL={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "tl")
+          }
+          onT={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "t")
+          }
+          onTR={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "tr")
+          }
+          onBL={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "bl")
+          }
+          onB={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "b")
+          }
+          onBR={() =>
+            !isHoldingBorder.current && (lastBorderState.current = "br")
+          }
         >
-          {goal.name}
-        </Card>
+          <Card
+            onClick={() => props.onClick(goal)}
+            elevation={4}
+            variant={isSelected ? "elevation" : "outlined"}
+            style={{
+              padding: 5,
+              width: bounds.width,
+              height: bounds.height,
+              userSelect: "none"
+            }}
+          >
+            <Icon className="handle">{"drag_handle"}</Icon>
+            {goal.name}
+          </Card>
+        </BorderTrigger>
       </div>
     </Draggable>
   );
