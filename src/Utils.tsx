@@ -27,3 +27,9 @@ export function getOrAskUser(key: string): string {
   }
   return value;
 }
+
+export function useForceUpdate(): VoidFunction {
+  const [, setVal] = React.useState(0);
+  const cb = React.useCallback(() => setVal(c => c + 1),[]);
+  return cb;
+}

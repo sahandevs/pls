@@ -51,7 +51,7 @@ export class SystemsDB {
   private goals = new BehaviorSubject<BehaviorSubject<Goal>[]>([]);
   private connections = new BehaviorSubject<BehaviorSubject<Connection>[]>([]);
   private systems = new BehaviorSubject<BehaviorSubject<System>[]>([]);
-  private config = new BehaviorSubject({
+  config = new BehaviorSubject({
     zoomLevel: 1,
     cameraPosition: { x: 0, y: 0 },
   });
@@ -148,7 +148,8 @@ export class SystemsDB {
       connections: this.connections.value.map((x) => x.value),
       config: this.config.value,
     };
-    this.dbRef.set(JSON.stringify(result));
+    const data = JSON.stringify(result);
+    this.dbRef.set(data);
     console.log("Saving Systems");
   }
 }
@@ -174,7 +175,7 @@ function updateFromDiff<T extends SystesmDBEntities>(
   targetsDiff.existed.forEach((item) => {
     const _subject = indexedOldTargets[toKey(item)];
     targetUpdateResult.push(_subject);
-    if (JSON.stringify(_subject) !== JSON.stringify(item)) {
+    if (JSON.stringify(_subject.value) !== JSON.stringify(item)) {
       _subject.next(item);
     }
   });

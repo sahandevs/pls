@@ -1,8 +1,8 @@
 import React from "react";
 import { fromEvent, BehaviorSubject } from "rxjs";
-import { debounceTime } from "rxjs/operators";
+import { debounceTime, take, skip } from "rxjs/operators";
 import { makeStyles } from "@material-ui/styles";
-import { Config } from "../../../data/SystemsDB";
+import { Config, useSystemsDBContext } from "../../../data/SystemsDB";
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -45,20 +45,16 @@ function calculateTransform({ zoomLevel, cameraPosition }: Config): string {
 export function Canvas(props: React.Props<{}>) {
   const containerRef = React.useRef<HTMLDivElement>();
   const innerRef = React.useRef<HTMLDivElement>();
+  const db = useSystemsDBContext();
   const styles = useStyles({});
   const [size, setSize] = React.useState({ width: 0, height: 0 });
   const isHoldingMouseMiddleButton = useIsHoldinMouseKey(1);
   const [, setScale] = React.useState(1);
-  const config = React.useMemo<Config>(
-    () => ({
-      cameraPosition: {
-        x: 0,
-        y: 0,
-      },
-      zoomLevel: 1,
-    }),
-    []
-  );
+  const config = React.useMemo<Config>(() => db.config.value, [db]);
+
+  const updateDbConfig = React.useCallback(() => {
+    db.config.next(config);
+  }, [db.config, config]);
 
   const updateInnerRefStyle = React.useCallback(
     (animate: boolean = false) => {
@@ -79,6 +75,18 @@ export function Canvas(props: React.Props<{}>) {
     [innerRef, config]
   );
 
+  React.useEffect(() => {
+    // skip default value and wait for server value
+    const sub = db.config.pipe(skip(1), take(1)).subscribe({
+      next: (v) => {
+        config.cameraPosition = v.cameraPosition;
+        config.zoomLevel = v.zoomLevel;
+        updateInnerRefStyle(false);
+      },
+    });
+    return () => sub.unsubscribe();
+  }, [db, config, updateInnerRefStyle]);
+
   // on space reset zoom to 1
   React.useEffect(() => {
     const onKeyUp = (e: KeyboardEvent) => {
@@ -86,11 +94,12 @@ export function Canvas(props: React.Props<{}>) {
       if (e.keyCode === SPACE_KEY_CODE) {
         config.zoomLevel = 1;
         updateInnerRefStyle(true);
+        updateDbConfig();
       }
     };
     window.document.addEventListener("keyup", onKeyUp);
     return () => window.document.removeEventListener("keyup", onKeyUp);
-  }, [updateInnerRefStyle, config]);
+  }, [updateInnerRefStyle, config, updateDbConfig]);
 
   // zoom
   React.useEffect(() => {
@@ -100,6 +109,7 @@ export function Canvas(props: React.Props<{}>) {
     });
     const onMouseWheel = (e: WheelEvent) => {
       config.zoomLevel = Math.max(0.1, config.zoomLevel + e.deltaY * -0.0005);
+      updateDbConfig();
       updateInnerRefStyle(true);
       _doUpdateScale.next(null);
     };
@@ -108,7 +118,7 @@ export function Canvas(props: React.Props<{}>) {
       window.document.removeEventListener("wheel", onMouseWheel);
       sub.unsubscribe();
     };
-  }, [updateInnerRefStyle, config]);
+  }, [updateInnerRefStyle, config, updateDbConfig]);
 
   React.useLayoutEffect(() => {
     if (!isHoldingMouseMiddleButton) {
@@ -121,12 +131,19 @@ export function Canvas(props: React.Props<{}>) {
     const onMouseMove = (e: MouseEvent) => {
       config.cameraPosition.x += e.movementX;
       config.cameraPosition.y += e.movementY;
+      updateDbConfig();
       // we directly update innerRef attribute because of performance resaons
       updateInnerRefStyle();
     };
     document.addEventListener("mousemove", onMouseMove);
     return () => document.removeEventListener("mousemove", onMouseMove);
-  }, [isHoldingMouseMiddleButton, innerRef, updateInnerRefStyle, config]);
+  }, [
+    isHoldingMouseMiddleButton,
+    innerRef,
+    updateInnerRefStyle,
+    config,
+    updateDbConfig,
+  ]);
 
   // setup width and height
   React.useLayoutEffect(() => {
