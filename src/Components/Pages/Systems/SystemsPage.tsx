@@ -4,7 +4,7 @@ import Draggable from "react-draggable";
 import { Canvas } from "./Canvas";
 import { useSystemsDBContext, Goal, Rect } from "../../../data/SystemsDB";
 import { useObservable } from "../../../Utils";
-import { Card, Icon } from "@material-ui/core";
+import { Card, Icon, Box, Chip } from "@material-ui/core";
 import { Observable } from "rxjs";
 import { BorderTrigger } from "./BorderTrigger";
 
@@ -173,10 +173,16 @@ function GoalView(props: GoalProps) {
                 flexDirection: "row",
                 flexWrap: "wrap",
                 alignItems: "baseline",
+                fontSize: 30
               }}
               className="content"
               dangerouslySetInnerHTML={{ __html: goal.name }}
             ></div>
+            <Box display="flex" flexDirection="row" flexWrap="warp">
+              {(goal.labels.map((label, i) => (
+                <Chip size="small" key={i} label={label}/>
+              )))}
+            </Box>
           </Card>
         </BorderTrigger>
       </div>
