@@ -11,8 +11,14 @@ export function SystemsPage() {
   const scale = useObservable(() => db.getZoomLevel(), 1);
   const goals = useObservable(() => db.getGoalsWithKey(), []);
   const systems = useObservable(() => db.getSystemsWithKey(), []);
+  const [
+    isInCreateConnectionMode,
+    setIsInCreateConnectionMode,
+  ] = React.useState(false);
 
-  const [selectedGoal, setSelectedGoal] = React.useState<Goal | undefined>();
+  const [selectedFirstGoal, setSelectedFirstGoal] = React.useState<
+    Goal | undefined
+  >();
 
   return (
     <>
@@ -26,14 +32,19 @@ export function SystemsPage() {
             goal={goal}
             scale={scale}
             onClick={(goal) => {
-              if (selectedGoal == null) {
-                setSelectedGoal(goal);
+              if (!isInCreateConnectionMode) return;
+              if (selectedFirstGoal == null) {
+                setSelectedFirstGoal(goal);
               } else {
-                setSelectedGoal(undefined);
+                alert(
+                  `creating connection between ${selectedFirstGoal.name} -> ${goal.name}`
+                );
+                setSelectedFirstGoal(undefined);
+                setIsInCreateConnectionMode(false);
               }
             }}
             goalKey={key}
-            selectedGoal={selectedGoal}
+            selectedGoal={selectedFirstGoal}
           />
         ))}
       </Canvas>
@@ -90,6 +101,23 @@ export function SystemsPage() {
             }}
           >
             <Icon>{"add"}</Icon>
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Toggle Connection creation">
+          <IconButton
+            onClick={() => {
+              if (isInCreateConnectionMode) {
+                setSelectedFirstGoal(undefined);
+                setIsInCreateConnectionMode(false);
+              } else {
+                setIsInCreateConnectionMode(true);
+              }
+            }}
+          >
+            <Icon color={isInCreateConnectionMode ? "secondary" : "default"}>
+              {"trending_flat"}
+            </Icon>
           </IconButton>
         </Tooltip>
       </Card>
