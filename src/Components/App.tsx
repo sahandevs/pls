@@ -13,7 +13,7 @@ import {
 const firebase = (window as any).firebase;
 
 function App() {
-  const [page, setPage] = React.useState(3);
+  const [page, setPage] = React.useState(1);
   const plsDb = React.useMemo(() => CreateOrGetDefaultPLSDatabase(), []);
   const systemsDb = React.useMemo(
     () => CreateOrGetDefaultSystemsDatabase(),
