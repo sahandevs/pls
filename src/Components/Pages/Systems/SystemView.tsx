@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 import { CanvasNode, UpdateManager } from "./CanvasNode";
 import { System, useSystemsDBContext } from "../../../data/SystemsDB";
 import { useObservable } from "../../../Utils";
@@ -16,6 +16,7 @@ type SystemProps = {
 export function SystemView(props: SystemProps) {
   const system = useObservable(props.system, null);
   const db = useSystemsDBContext();
+  const positionRef = React.useRef<HTMLParagraphElement>();
   const systemGoals = useObservable(
     () => db.getSystemGoals(props.systemKey),
     []
@@ -28,7 +29,16 @@ export function SystemView(props: SystemProps) {
           bounds: v,
         })),
       initial: db.getSystemInitialValue(props.systemKey).bounds,
-      updates: props.system.pipe(map((v) => v.bounds)),
+      updates: props.system.pipe(
+        map((v) => v.bounds),
+        tap((x) => {
+          if (positionRef.current != null) {
+            const _pos = `${x.left.toFixed(2)}, ${x.top.toFixed(2)}`;
+            const _bounds = `w${x.width.toFixed()}h${x.height.toFixed()}`;
+            positionRef.current.innerText = `${_pos} ${_bounds};`;
+          }
+        })
+      ),
     }),
     [props.systemKey, db, props.system]
   );
@@ -52,23 +62,22 @@ export function SystemView(props: SystemProps) {
             borderStyle: "dashed",
             borderRadius: 5,
             borderTopLeftRadius: 0,
-
             pointerEvents: "visible",
           }}
         >
           <Icon className="handle">{"drag_handle"}</Icon>
           <Icon
-              style={{ cursor: "pointer", position: "absolute", left: 50 }}
-              onClick={() => {
-                const isConfirmed = window.confirm(
-                  "Are you sure you want to delete this system?"
-                );
-                if (!isConfirmed) return;
-                db.deleteSystem(props.systemKey);
-              }}
-            >
-              {"delete"}
-            </Icon>
+            style={{ cursor: "pointer", position: "absolute", left: 50 }}
+            onClick={() => {
+              const isConfirmed = window.confirm(
+                "Are you sure you want to delete this system?"
+              );
+              if (!isConfirmed) return;
+              db.deleteSystem(props.systemKey);
+            }}
+          >
+            {"delete"}
+          </Icon>
           <p
             style={{ position: "absolute", bottom: 0, left: 15 }}
           >{`${systemGoals.length} Goals`}</p>
@@ -95,6 +104,10 @@ export function SystemView(props: SystemProps) {
             }}
             dangerouslySetInnerHTML={{ __html: system.name }}
           ></div>
+          <p
+            ref={positionRef as any}
+            style={{ position: "absolute", bottom: 0, right: 20, opacity: 0.5 }}
+          ></p>
         </div>
       )}
     </CanvasNode>

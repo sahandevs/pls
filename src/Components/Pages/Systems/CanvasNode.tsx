@@ -17,6 +17,7 @@ export function CanvasNode(props: {
   children: (bounds: Rect) => React.ReactNode;
   scale: number;
   updateManager: UpdateManager;
+  offsetPosition?: { x: number, y: number}
 }) {
   const isHoldingBorder = React.useRef(false);
   const containerRef = React.useRef<HTMLDivElement>();
@@ -63,8 +64,8 @@ export function CanvasNode(props: {
   React.useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!isHoldingBorder.current) return;
-      const movementX = e.movementX * props.scale;
-      const movementY = e.movementY * props.scale;
+      const movementX = e.movementX;
+      const movementY = e.movementY;
 
       if (lastBorderState.current === "r")
         update((c) => ({
@@ -135,13 +136,14 @@ export function CanvasNode(props: {
     <Draggable
       handle=".handle"
       position={{ x: bounds.left, y: bounds.top }}
-      onStop={(e, d) => {
+      onDrag={(e, d) => {
         update((c) => ({
           ...c,
           left: d.x,
           top: d.y,
         }));
       }}
+      positionOffset={props.offsetPosition}
       scale={props.scale}
     >
       <div ref={containerRef as any} style={{ position: "absolute" }}>

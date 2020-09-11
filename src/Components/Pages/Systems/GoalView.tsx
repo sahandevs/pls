@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Card, Icon, Box, Chip } from "@material-ui/core";
 import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 import { CanvasNode, UpdateManager } from "./CanvasNode";
 import { Goal, useSystemsDBContext } from "../../../data/SystemsDB";
 import { useObservable } from "../../../Utils";
@@ -17,6 +17,7 @@ type GoalProps = {
 export function GoalView(props: GoalProps) {
   const goal = useObservable(props.goal, null);
   const isSelected = props.selectedGoal?.name === goal?.name;
+  const positionRef = React.useRef<HTMLParagraphElement>();
   const db = useSystemsDBContext();
   const updateManager = React.useMemo<UpdateManager>(
     () => ({
@@ -26,7 +27,16 @@ export function GoalView(props: GoalProps) {
           bounds: v,
         })),
       initial: db.getGoalInitialValue(props.goalKey).bounds,
-      updates: props.goal.pipe(map((v) => v.bounds)),
+      updates: props.goal.pipe(
+        map((v) => v.bounds),
+        tap((x) => {
+          if (positionRef.current != null) {
+            const _pos = `${x.left.toFixed(2)}, ${x.top.toFixed(2)}`;
+            const _bounds = `w${x.width.toFixed()}h${x.height.toFixed()}`;
+            positionRef.current.innerText = `${_pos} ${_bounds};`;
+          }
+        })
+      ),
     }),
     [props.goalKey, db, props.goal]
   );
@@ -119,6 +129,10 @@ export function GoalView(props: GoalProps) {
               label={"+"}
             />
           </Box>
+          <p
+            ref={positionRef as any}
+            style={{ position: "absolute", bottom: 0, right: 20, opacity: 0.5 }}
+          ></p>
         </Card>
       )}
     </CanvasNode>

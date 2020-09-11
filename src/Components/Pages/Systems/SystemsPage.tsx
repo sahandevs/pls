@@ -5,6 +5,7 @@ import { useObservable } from "../../../Utils";
 import { GoalView } from "./GoalView";
 import { Card, IconButton, Icon, Tooltip } from "@material-ui/core";
 import { SystemView } from "./SystemView";
+import { ConnectionsView } from "./ConnectionsView";
 
 export function SystemsPage() {
   const db = useSystemsDBContext();
@@ -26,6 +27,7 @@ export function SystemsPage() {
         {systems.map(([system, key]) => (
           <SystemView key={key} system={system} scale={scale} systemKey={key} />
         ))}
+
         {goals.map(([goal, key]) => (
           <GoalView
             key={key}
@@ -36,9 +38,10 @@ export function SystemsPage() {
               if (selectedFirstGoal == null) {
                 setSelectedFirstGoal(goal);
               } else {
-                alert(
-                  `creating connection between ${selectedFirstGoal.name} -> ${goal.name}`
-                );
+                db.createConnection({
+                  from: selectedFirstGoal,
+                  to: goal,
+                });
                 setSelectedFirstGoal(undefined);
                 setIsInCreateConnectionMode(false);
               }
@@ -47,6 +50,7 @@ export function SystemsPage() {
             selectedGoal={selectedFirstGoal}
           />
         ))}
+        <ConnectionsView />
       </Canvas>
 
       <Card
@@ -115,7 +119,7 @@ export function SystemsPage() {
               }
             }}
           >
-            <Icon color={isInCreateConnectionMode ? "secondary" : "default"}>
+            <Icon color={isInCreateConnectionMode ? "secondary" : "inherit"}>
               {"trending_flat"}
             </Icon>
           </IconButton>

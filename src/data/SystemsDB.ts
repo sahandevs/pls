@@ -1,7 +1,18 @@
 import * as React from "react";
 import { Observable, BehaviorSubject, combineLatest } from "rxjs";
-import { distinct, map, skip, debounceTime, flatMap, throttleTime } from "rxjs/operators";
-
+import {
+  distinct,
+  map,
+  skip,
+  debounceTime,
+  flatMap,
+  throttleTime,
+} from "rxjs/operators";
+const PLACEHOLDER_GOAL = {
+  bounds: { top: 0, height: 50, left: 0, width: 50 },
+  name: "",
+  labels: [],
+};
 const firebase = (window as any).firebase;
 export const SystemsDBContext = React.createContext<SystemsDB | null>(null);
 export function useSystemsDBContext(): SystemsDB {
@@ -87,13 +98,19 @@ export class SystemsDB {
 
   getGoalInitialValue(key: string): Goal {
     const result = this.goals.value.find((x) => toKey(x.value) === key)?.value;
-    if (result == null) throw new Error("goal not found");
+    if (result == null) return PLACEHOLDER_GOAL;
+    return result;
+  }
+
+  getGoalWithKey(key: string): Observable<Goal> {
+    const result = this.goals.value.find((x) => toKey(x.value) === key);
+    if (result == null) return new BehaviorSubject(PLACEHOLDER_GOAL);
     return result;
   }
 
   updateGoalWithKey(key: string, updated: (current: Goal) => Goal) {
     const result = this.goals.value.find((x) => toKey(x.value) === key);
-    if (result == null) throw new Error("goal not found");
+    if (result == null) return;
     const newValue = updated(result.value);
     if (
       this.goals.value.find(
@@ -109,8 +126,24 @@ export class SystemsDB {
   }
 
   deleteGoal(key: string) {
-    this.goals.next(this.goals.value.filter((x) => toKey(x.value) !== key));
-    // TODO: update connections
+    let goal: Goal | null = null;
+    this.goals.next(
+      this.goals.value.filter((x) => {
+        if (toKey(x.value) !== key) {
+          goal = x.value;
+          return true;
+        }
+        return false;
+      })
+    );
+    if (goal != null) {
+      const goalKey = toKey(goal);
+      this.connections.next(
+        this.connections.value.filter(
+          (x) => x.value.from === goalKey || x.value.to === goalKey
+        )
+      );
+    }
   }
 
   createGoal(goal: Goal) {
@@ -139,8 +172,23 @@ export class SystemsDB {
     return this.systems.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
   }
 
-  getConnectionsWithKeys(): Observable<[Observable<Connection>, string][]> {
-    return this.connections.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
+  getConnectionsWithKeys(): Observable<[Connection, string][]> {
+    return this.connections.pipe(
+      map((x) => x.map((y) => [y.value, toKey(y.value)]))
+    );
+  }
+
+  deleteConnection(key: string) {
+    this.connections.next(
+      this.connections.value.filter((x) => toKey(x.value) !== key)
+    );
+  }
+
+  createConnection({ from, to }: { from: Goal; to: Goal }) {
+    this.connections.next([
+      ...this.connections.value,
+      new BehaviorSubject({ from: toKey(from), to: toKey(to) }),
+    ]);
   }
 
   getSystemGoals(_system: System | string): Observable<Observable<Goal>[]> {
@@ -190,7 +238,6 @@ export class SystemsDB {
 
   deleteSystem(key: string) {
     this.systems.next(this.systems.value.filter((x) => toKey(x.value) !== key));
-    // TODO: update connections
   }
 
   createSystem(goal: Goal) {
