@@ -1,20 +1,25 @@
 import * as React from "react";
 import { Canvas } from "./Canvas";
-import { useSystemsDBContext, Goal } from "../../../data/SystemsDB";
+import { useSystemsDBContext, Goal, System } from "../../../data/SystemsDB";
 import { useObservable } from "../../../Utils";
 import { GoalView } from "./GoalView";
 import { Card, IconButton, Icon, Tooltip } from "@material-ui/core";
+import { SystemView } from "./SystemView";
 
 export function SystemsPage() {
   const db = useSystemsDBContext();
   const scale = useObservable(() => db.getZoomLevel(), 1);
   const goals = useObservable(() => db.getGoalsWithKey(), []);
+  const systems = useObservable(() => db.getSystemsWithKey(), []);
 
   const [selectedGoal, setSelectedGoal] = React.useState<Goal | undefined>();
 
   return (
     <>
       <Canvas>
+        {systems.map(([system, key]) => (
+          <SystemView key={key} system={system} scale={scale} systemKey={key} />
+        ))}
         {goals.map(([goal, key]) => (
           <GoalView
             key={key}
@@ -56,10 +61,32 @@ export function SystemsPage() {
                   left: -db.config.value.cameraPosition.x,
                   top: -db.config.value.cameraPosition.y,
                   height: 300,
-                  width: 400
+                  width: 400,
                 },
               };
               db.createGoal(goal);
+            }}
+          >
+            <Icon>{"add"}</Icon>
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Add System">
+          <IconButton
+            onClick={() => {
+              const systemName = prompt("Enter system name");
+              if (systemName == null) return;
+              const system: System = {
+                name: systemName,
+                labels: [],
+                bounds: {
+                  left: -db.config.value.cameraPosition.x,
+                  top: -db.config.value.cameraPosition.y,
+                  height: 300,
+                  width: 400,
+                },
+              };
+              db.createSystem(system);
             }}
           >
             <Icon>{"add"}</Icon>

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Observable, BehaviorSubject, combineLatest } from "rxjs";
-import { distinct, map, skip, debounceTime } from "rxjs/operators";
+import { distinct, map, skip, debounceTime, flatMap, throttleTime } from "rxjs/operators";
 
 const firebase = (window as any).firebase;
 export const SystemsDBContext = React.createContext<SystemsDB | null>(null);
@@ -96,7 +96,9 @@ export class SystemsDB {
     if (result == null) throw new Error("goal not found");
     const newValue = updated(result.value);
     if (
-      this.goals.value.find((x) => toKey(x.value) === toKey(newValue) && x !== result) != null
+      this.goals.value.find(
+        (x) => toKey(x.value) === toKey(newValue) && x !== result
+      ) != null
     ) {
       alert("There is already another goal with this name");
       return;
@@ -107,7 +109,7 @@ export class SystemsDB {
   }
 
   deleteGoal(key: string) {
-    this.goals.next(this.goals.value.filter(x => toKey(x.value) !== key));
+    this.goals.next(this.goals.value.filter((x) => toKey(x.value) !== key));
     // TODO: update connections
   }
 
@@ -133,23 +135,66 @@ export class SystemsDB {
     return this.goals.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
   }
 
+  getSystemsWithKey(): Observable<[Observable<System>, string][]> {
+    return this.systems.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
+  }
+
   getConnectionsWithKeys(): Observable<[Observable<Connection>, string][]> {
     return this.connections.pipe(map((x) => x.map((y) => [y, toKey(y.value)])));
   }
 
-  getSystemGoals(_system: System): Observable<Observable<Goal>[]> {
+  getSystemGoals(_system: System | string): Observable<Observable<Goal>[]> {
     const sysSubject = this.systems.value.find(
-      (x) => toKey(x.value) === toKey(_system)
+      (x) =>
+        toKey(x.value) ===
+        (typeof _system === "string" ? _system : toKey(_system))
     );
     if (sysSubject == null) throw new Error("System not found");
-    // TODO: this implementation doesn't work when a goal itself moves
     return combineLatest(sysSubject, this.goals).pipe(
-      map(([system]) => {
-        return this.goals.value.filter((x) =>
-          isBoundAinY(x.value.bounds, system.bounds)
-        );
-      })
+      throttleTime(30),
+      map(([system]) =>
+        this.goals.pipe(
+          throttleTime(30),
+          map((x) =>
+            x.filter((x) => isBoundAinY(x.value.bounds, system.bounds))
+          )
+        )
+      ),
+      flatMap((x) => x)
     );
+  }
+
+  getSystemInitialValue(key: string): System {
+    const result = this.systems.value.find((x) => toKey(x.value) === key)
+      ?.value;
+    if (result == null) throw new Error("System not found");
+    return result;
+  }
+
+  updateSystemWithKey(key: string, updated: (current: System) => System) {
+    const result = this.systems.value.find((x) => toKey(x.value) === key);
+    if (result == null) throw new Error("System not found");
+    const newValue = updated(result.value);
+    if (
+      this.systems.value.find(
+        (x) => toKey(x.value) === toKey(newValue) && x !== result
+      ) != null
+    ) {
+      alert("There is already another goal with this name");
+      return;
+    } else {
+      result.next(newValue);
+      this._forceUpdate.next(null);
+    }
+  }
+
+  deleteSystem(key: string) {
+    this.systems.next(this.systems.value.filter((x) => toKey(x.value) !== key));
+    // TODO: update connections
+  }
+
+  createSystem(goal: Goal) {
+    this.systems.next([...this.systems.value, new BehaviorSubject(goal)]);
   }
 
   dbRef: any;
@@ -277,10 +322,10 @@ if (process.env.NODE_ENV === "development") {
 }
 
 function isBoundAinY(a: Rect, b: Rect): boolean {
-  if (a.left >= b.left) return false;
+  if (a.left <= b.left) return false;
   if (a.top <= b.top) return false;
   if (a.left + a.width >= b.left + b.width) return false;
-  if (a.top + a.height >= b.height + b.height) return false;
+  if (a.top + a.height >= b.top + b.height) return false;
 
   return true;
 }
