@@ -53,8 +53,8 @@ export function SystemsPage() {
                 labels: [],
                 name: goalName,
                 bounds: {
-                  left: db.config.value.cameraPosition.x,
-                  top: db.config.value.cameraPosition.y,
+                  left: -db.config.value.cameraPosition.x,
+                  top: -db.config.value.cameraPosition.y,
                   height: 300,
                   width: 400
                 },
