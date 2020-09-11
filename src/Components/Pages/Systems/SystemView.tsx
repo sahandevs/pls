@@ -57,6 +57,18 @@ export function SystemView(props: SystemProps) {
           }}
         >
           <Icon className="handle">{"drag_handle"}</Icon>
+          <Icon
+              style={{ cursor: "pointer", position: "absolute", left: 50 }}
+              onClick={() => {
+                const isConfirmed = window.confirm(
+                  "Are you sure you want to delete this system?"
+                );
+                if (!isConfirmed) return;
+                db.deleteSystem(props.systemKey);
+              }}
+            >
+              {"delete"}
+            </Icon>
           <p
             style={{ position: "absolute", bottom: 0, left: 15 }}
           >{`${systemGoals.length} Goals`}</p>
