@@ -45,6 +45,7 @@ function calculateTransform({ zoomLevel, cameraPosition }: Config): string {
 export function Canvas(props: React.Props<{}>) {
   const containerRef = React.useRef<HTMLDivElement>();
   const innerRef = React.useRef<HTMLDivElement>();
+  const positionRef = React.useRef<HTMLParagraphElement>();
   const db = useSystemsDBContext();
   const styles = useStyles({});
   const [size, setSize] = React.useState({ width: 0, height: 0 });
@@ -60,6 +61,12 @@ export function Canvas(props: React.Props<{}>) {
     (animate: boolean = false) => {
       if (innerRef.current == null)
         throw new Error("Unhandled situtation innerRef cannot be null here");
+      if (positionRef.current != null) {
+        positionRef.current.innerText = `${config.cameraPosition.x}, ${
+          config.cameraPosition.y
+        } (x${config.zoomLevel.toPrecision(2)})`;
+      }
+
       let value = calculateTransform(config);
       const ANIMATION = ";transition: transform 100ms";
       if (animate) {
@@ -72,7 +79,7 @@ export function Canvas(props: React.Props<{}>) {
 
       innerRef.current.setAttribute("style", value);
     },
-    [innerRef, config]
+    [innerRef, config, positionRef]
   );
 
   React.useEffect(() => {
@@ -181,6 +188,10 @@ export function Canvas(props: React.Props<{}>) {
       <div ref={innerRef as any} className={styles.innerContainer}>
         {props.children}
       </div>
+      <p
+        ref={positionRef as any}
+        style={{ position: "absolute", bottom: 0, right: 20, opacity: 0.5 }}
+      ></p>
     </div>
   );
 }
