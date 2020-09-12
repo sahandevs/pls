@@ -126,11 +126,11 @@ export class SystemsDB {
   }
 
   deleteGoal(key: string) {
-    let goal: Goal | null = null;
+    // let goal: Goal | null = null;
     this.goals.next(
       this.goals.value.filter((x) => {
         if (toKey(x.value) !== key) {
-          goal = x.value;
+          // goal = x.value;
           return true;
         }
         return false;
