@@ -136,14 +136,14 @@ export class SystemsDB {
         return false;
       })
     );
-    if (goal != null) {
-      const goalKey = toKey(goal);
-      this.connections.next(
-        this.connections.value.filter(
-          (x) => x.value.from === goalKey || x.value.to === goalKey
-        )
-      );
-    }
+    // if (goal != null) {
+    //   const goalKey = toKey(goal);
+    //   this.connections.next(
+    //     this.connections.value.filter(
+    //       (x) => x.value.from === goalKey || x.value.to === goalKey
+    //     )
+    //   );
+    // }
   }
 
   createGoal(goal: Goal) {
