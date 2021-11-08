@@ -44,6 +44,7 @@ function App() {
       .catch((e) => {
         alert(e.message);
         if (localUID == null) window.location.reload();
+        else setupIfNeeded(localUID)
       });
   }, [plsDb, systemsDb]);
   return (

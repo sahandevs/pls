@@ -138,7 +138,11 @@ export class PLSDatabase {
   dbRef: any;
 
   loadFromFirebase(uid: string) {
+    firebase.firestore().enablePersistence()
+      .then(x => console.log("OK enablePersistence", x))
+      .catch(err => console.error("NOK enablePersistence", err));
     this.dbRef = firebase.database().ref(`sync_data/${uid}`);
+    console.log(this.dbRef);
     this.dbRef.on("value", (s: any) => {
       const result = JSON.parse(s.val() ?? "{}");
       this.currencies.next(result["currencies"] ?? []);
