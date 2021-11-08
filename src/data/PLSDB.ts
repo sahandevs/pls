@@ -122,7 +122,7 @@ export class PLSDatabase {
   removeExchangeRate(rate: ExchangeRate) {
     this.exchangeRates.next(
       this.exchangeRates.value.filter(
-        (x) => x.from.name === rate.from.name && x.to.name === rate.to.name
+        (x) => x.from.name !== rate.from.name || x.to.name !== rate.to.name
       )
     );
   }
