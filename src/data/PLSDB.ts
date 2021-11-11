@@ -152,6 +152,23 @@ export class PLSDatabase {
     });
   }
 
+  backup() {
+    const result = {
+      currencies: this.currencies.value,
+      exchangeRates: this.exchangeRates.value,
+      bank: this.bank.value,
+    };
+    let data = JSON.stringify(result);
+    localStorage.setItem("__backup_PLSDB", data);
+    console.log("Backup", data);
+  }
+
+  restoreBackup() {
+    let data = localStorage.getItem("__backup_PLSDB");
+    console.log("Restoring backup");
+    this.dbRef.set(data);
+  }
+
   save() {
     const result = {
       currencies: this.currencies.value,
@@ -165,5 +182,6 @@ export class PLSDatabase {
 
 export function CreateOrGetDefaultPLSDatabase(): PLSDatabase {
   const db = new PLSDatabase();
+  (window as any).pls = db;
   return db;
 }
