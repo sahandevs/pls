@@ -163,6 +163,14 @@ export class PLSDatabase {
     console.log("Backup", data);
   }
 
+  floorAllBanks() {
+    let bank: Bank = JSON.parse(JSON.stringify(this.bank.value));
+    for (const key of Object.keys(bank)) {
+      bank[key] = Math.floor(bank[key])
+    }
+    this.bank.next(bank);
+  }
+
   restoreBackup() {
     let data = localStorage.getItem("__backup_PLSDB");
     console.log("Restoring backup");
