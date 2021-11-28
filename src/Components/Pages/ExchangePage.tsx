@@ -32,15 +32,19 @@ function ExchangeButtonBase({
         db.exchange(exchangeRate, value);
         onDone();
       }}
-    >{`1 ${db.getCurrency(exchangeRate.from)!.unit} of ${db.getCurrency(exchangeRate.from)!.name} to ${
-      value * exchangeRate.rate
-    } ${db.getCurrency(exchangeRate.to)!.unit} of ${db.getCurrency(exchangeRate.to)!.name}`}</MenuItem>
+    >{`1 ${db.getCurrency(exchangeRate.from)!.unit} of ${
+      db.getCurrency(exchangeRate.from)!.name
+    } to ${value * exchangeRate.rate} ${
+      db.getCurrency(exchangeRate.to)!.unit
+    } of ${db.getCurrency(exchangeRate.to)!.name}`}</MenuItem>
   );
 }
 
-const ExchangeButton = React.forwardRef((props: Omit<ExchangeButtonBaseProps, "innerRef">, ref) => (
-  <ExchangeButtonBase {...props} innerRef={ref} />
-));
+const ExchangeButton = React.forwardRef(
+  (props: Omit<ExchangeButtonBaseProps, "innerRef">, ref) => (
+    <ExchangeButtonBase {...props} innerRef={ref} />
+  )
+);
 
 function ExchangeItem({ currency }: { currency: Currency }) {
   const db = usePLSDBContext();
@@ -54,7 +58,10 @@ function ExchangeItem({ currency }: { currency: Currency }) {
   return (
     <Card variant={"outlined"} style={{ margin: 3 }}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
-        <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
+        <Typography>
+          {`${currentValue} ${currency.unit} of `}
+          <span dangerouslySetInnerHTML={{ __html: currency.name }}></span>
+        </Typography>
         <Button
           onClick={(event) => setAnchorEl(event.currentTarget)}
           aria-controls="menu"
