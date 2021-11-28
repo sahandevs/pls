@@ -32,9 +32,9 @@ function ExchangeButtonBase({
         db.exchange(exchangeRate, value);
         onDone();
       }}
-    >{`1 ${exchangeRate.from.unit} of ${exchangeRate.from.name} to ${
+    >{`1 ${db.getCurrency(exchangeRate.from)!.unit} of ${db.getCurrency(exchangeRate.from)!.name} to ${
       value * exchangeRate.rate
-    } ${exchangeRate.to.unit} of ${exchangeRate.to.name}`}</MenuItem>
+    } ${db.getCurrency(exchangeRate.to)!.unit} of ${db.getCurrency(exchangeRate.to)!.name}`}</MenuItem>
   );
 }
 
@@ -45,7 +45,7 @@ const ExchangeButton = React.forwardRef((props: Omit<ExchangeButtonBaseProps, "i
 function ExchangeItem({ currency }: { currency: Currency }) {
   const db = usePLSDBContext();
   const exchangeRates = useObservable(db.getExchangeRates(), []);
-  const currentValue = useObservable(db.bankOf(currency), 0);
+  const currentValue = useObservable(db.bankOf(currency.id), 0);
   const [anchorEl, setAnchorEl] = React.useState<Element | null>(null);
   const handleClose = () => {
     setAnchorEl(null);
@@ -70,10 +70,10 @@ function ExchangeItem({ currency }: { currency: Currency }) {
           onClose={handleClose}
         >
           {exchangeRates
-            .filter((x) => x.from.name === currency.name)
+            .filter((x) => x.from === currency.id)
             .map((item) => (
               <ExchangeButton
-                key={item.from.name + "_" + item.to.name}
+                key={item.from + "_" + item.to}
                 exchangeRate={item}
                 value={1}
                 onDone={handleClose}
@@ -93,10 +93,10 @@ function ExchangeItem({ currency }: { currency: Currency }) {
 
 function SpendItem({ currency }: { currency: Currency }) {
   const db = usePLSDBContext();
-  const currentValue = useObservable(db.bankOf(currency), 0);
+  const currentValue = useObservable(db.bankOf(currency.id), 0);
   const canSpend1 = useObservable(db.canSpend(currency, 1), false);
   const exchangeRates = useObservable(db.getExchangeRates(), []).filter(
-    (x) => x.from.name === currency.name
+    (x) => x.from === currency.id
   );
   const [anchorEl, setAnchorEl] = React.useState<Element | null>(null);
   const handleClose = () => {
@@ -123,10 +123,10 @@ function SpendItem({ currency }: { currency: Currency }) {
               onClose={handleClose}
             >
               {exchangeRates
-                .filter((x) => x.from.name === currency.name)
+                .filter((x) => x.from === currency.id)
                 .map((item) => (
                   <ExchangeButton
-                    key={item.from.name + "_" + item.to.name}
+                    key={item.from + "_" + item.to}
                     exchangeRate={item}
                     value={1}
                     onDone={handleClose}
@@ -160,7 +160,7 @@ export function ExchangePage() {
         {currencies
           .filter((x) => x.isSource)
           .map((currency) => (
-            <ExchangeItem key={currency.name} currency={currency} />
+            <ExchangeItem key={currency.id} currency={currency} />
           ))}
       </Box>
       <Divider variant={"middle"} />
@@ -174,7 +174,7 @@ export function ExchangePage() {
         {currencies
           .filter((x) => !x.isSource)
           .map((currency) => (
-            <SpendItem key={currency.name} currency={currency} />
+            <SpendItem key={currency.id} currency={currency} />
           ))}
       </Box>
     </Box>

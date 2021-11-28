@@ -1,5 +1,5 @@
 import React from "react";
-import { Currency, usePLSDBContext } from "../../data/PLSDB";
+import { Currency, newUuid, usePLSDBContext } from "../../data/PLSDB";
 import { useObservable } from "../../Utils";
 import {
   Box,
@@ -22,18 +22,12 @@ function CurrencyItem({
   const db = usePLSDBContext();
   const [name, setName] = React.useState(() => currency.name);
   const [icon, setIcon] = React.useState(() => currency.icon);
-  const [description, setDescription] = React.useState(
-    () => currency.description
-  );
   const [isSource, setIsSource] = React.useState(() => currency.isSource);
-  const [isTime, setIsTime] = React.useState(() => currency.isTime);
   const [unit, setUnit] = React.useState(() => currency.unit);
   const isSmallScreen = useIsSmallScreen();
   const isEdited =
     name !== currency.name ||
     icon !== currency.icon ||
-    description !== currency.description ||
-    isTime !== currency.isTime ||
     unit !== currency.unit ||
     isSource !== currency.isSource;
 
@@ -53,17 +47,10 @@ function CurrencyItem({
         onChange={(e) => setName(e.target.value)}
       />
       <TextField
-        label={"Description"}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      <TextField
         label={"Unit"}
         value={unit}
         onChange={(e) => setUnit(e.target.value)}
       />
-
-      <Checkbox checked={isTime} onChange={(e, v) => setIsTime(v)} />
       <Typography>{"Is time"}</Typography>
       <Checkbox checked={isSource} onChange={(e, v) => setIsSource(v)} />
       <Typography>{"Is source"}</Typography>
@@ -73,10 +60,9 @@ function CurrencyItem({
             db.addOrUpdateCurrency({
               name,
               icon,
-              description,
-              isTime,
               unit,
               isSource,
+              id: currency.id,
             });
           }}
         >
@@ -136,10 +122,9 @@ export function SetupCurrencies() {
         key={`new_currency_item_${currencies.length}`}
         currency={{
           name: `New currency ${currencies.length + 1}`,
-          description: "",
           icon: "",
           isSource: false,
-          isTime: false,
+          id: newUuid(),
           unit: "hour",
         }}
         isNew={true}

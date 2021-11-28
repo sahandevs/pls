@@ -26,8 +26,8 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
   const isSmallScreen = useIsSmallScreen();
 
   const isEdited =
-    from?.name !== rate?.from.name ||
-    to?.name !== rate?.to.name ||
+    from !== rate?.from ||
+    to !== rate?.to ||
     Number(rateValue) !== rate?.rate;
   const isValid =
     !isNaN(Number(rateValue)) &&
@@ -42,16 +42,16 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
           <InputLabel id="from-label-id">{"From"}</InputLabel>
           <Select
             labelId="from-label-id"
-            value={from?.name}
+            value={db.getCurrency(from ?? "")?.id}
             onChange={(e: any, d: any) =>
-              setFrom(currencies.find((x) => x.name === e.target.value))
+              setFrom(currencies.find((x) => x.id === e.target.value)?.id)
             }
           >
             <MenuItem>{"-"}</MenuItem>
             {currencies
-              .filter((x) => x.name !== to?.name)
+              .filter((x) => x.id !== to)
               .map((currency, i) => (
-                <MenuItem key={currency.name + "_from"} value={currency.name}>
+                <MenuItem key={currency.id + "_from"} value={currency.id}>
                   {currency.name}
                 </MenuItem>
               ))}
@@ -69,16 +69,16 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
           <InputLabel id="to-label-id">{"To"}</InputLabel>
           <Select
             labelId="to-label-id"
-            value={to?.name}
+            value={db.getCurrency(to ?? "")?.id}
             onChange={(e: any, d: any) =>
-              setTo(currencies.find((x) => x.name === e.target.value))
+              setTo(currencies.find((x) => x.id === e.target.value)?.id)
             }
           >
             <MenuItem>{"-"}</MenuItem>
             {currencies
-              .filter((x) => x.name !== from?.name)
+              .filter((x) => x.id !== from)
               .map((currency, i) => (
-                <MenuItem key={currency.name + "_to"} value={currency.name}>
+                <MenuItem key={currency.id + "_to"} value={currency.id}>
                   {currency.name}
                 </MenuItem>
               ))}
@@ -86,9 +86,9 @@ function Item({ rate, isNew }: { rate?: ExchangeRate; isNew: boolean }) {
         </FormControl>
       </Box>
       {isValid && (
-        <Typography>{`1 ${from?.unit} of ${from?.name} = ${Number(rateValue)} ${
-          to?.unit
-        } of ${to?.name}`}</Typography>
+        <Typography>{`1 ${db.getCurrency(from ?? "")?.unit} of ${db.getCurrency(from ?? "")?.name} = ${Number(rateValue)} ${
+          db.getCurrency(to ?? "")?.unit
+        } of ${db.getCurrency(to ?? "")?.name}`}</Typography>
       )}
 
       <Box display={"flex"} flexDirection={"row"}>
@@ -154,7 +154,7 @@ export function SetupExchangeRates() {
     <Box display={"flex"} flexDirection={"column"}>
       {rates.map((rate, i) => (
         <Item
-          key={rate.from.name + "_" + rate.to.name + "_" + rate.rate}
+          key={rate.from + "_" + rate.to + "_" + rate.rate}
           rate={rate}
           isNew={false}
         />
