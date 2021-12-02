@@ -81,6 +81,10 @@ export class PLSDatabase {
     this.currencies.next(newValue);
   }
 
+  get version(): DB["version"] {
+    return "2";
+  }
+
   getCurrency(id: Id): Currency | undefined {
     return this.currencies.value.find((x) => x.id === id);
   }
