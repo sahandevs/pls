@@ -46,7 +46,13 @@ const ExchangeButton = React.forwardRef(
   )
 );
 
-function ExchangeItem({ currency }: { currency: Currency }) {
+function ExchangeItem({
+  currency,
+  filter,
+}: {
+  currency: Currency;
+  filter: string;
+}) {
   const db = usePLSDBContext();
   const exchangeRates = useObservable(db.getExchangeRates(), []);
   const currentValue = useObservable(db.bankOf(currency.id), 0);
@@ -60,7 +66,16 @@ function ExchangeItem({ currency }: { currency: Currency }) {
       <Box padding={2} display={"flex"} flexDirection={"column"}>
         <Typography>
           {`${currentValue} ${currency.unit} of `}
-          <span dangerouslySetInnerHTML={{ __html: currency.name }}></span>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: currency.name
+                .toLowerCase()
+                .replace(
+                  filter,
+                  `<span style="background-color:yellow">${filter}</span>`
+                ),
+            }}
+          ></span>
         </Typography>
         <Button
           onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -98,7 +113,13 @@ function ExchangeItem({ currency }: { currency: Currency }) {
   );
 }
 
-function SpendItem({ currency }: { currency: Currency }) {
+function SpendItem({
+  currency,
+  filter,
+}: {
+  currency: Currency;
+  filter: string;
+}) {
   const db = usePLSDBContext();
   const currentValue = useObservable(db.bankOf(currency.id), 0);
   const canSpend1 = useObservable(db.canSpend(currency, 1), false);
@@ -112,7 +133,19 @@ function SpendItem({ currency }: { currency: Currency }) {
   return (
     <Card variant={"outlined"} style={{ margin: 3 }}>
       <Box padding={2} display={"flex"} flexDirection={"column"}>
-        <Typography>{`${currentValue} ${currency.unit} of ${currency.name}`}</Typography>
+        <Typography>
+          {`${currentValue} ${currency.unit} of `}
+          <span
+            dangerouslySetInnerHTML={{
+              __html: currency.name
+                .toLowerCase()
+                .replace(
+                  filter,
+                  `<span style="background-color:yellow">${filter}</span>`
+                ),
+            }}
+          ></span>
+        </Typography>
         {exchangeRates.length > 0 && (
           <>
             <Button
@@ -154,10 +187,31 @@ function SpendItem({ currency }: { currency: Currency }) {
 export function ExchangePage() {
   const db = usePLSDBContext();
   const currencies = useObservable(db.getCurrencies(), []);
+  const [search, setSearch] = React.useState("");
+  React.useEffect(() => {
+    const eventHandler = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "Escape":
+          setSearch("");
+          break;
+        case "Backspace":
+          setSearch((x) => x.slice(0, -1));
+          break;
+        default:
+          if (e.key.length === 1) setSearch((x) => x + e.key);
+          break;
+      }
+    };
+    document.addEventListener("keydown", eventHandler);
+    return () => document.removeEventListener("keydown", eventHandler);
+  }, [setSearch]);
+
+  const isInFilter = (x) => x.name.toLowerCase().match(search.toLowerCase());
 
   return (
     <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
       <Typography variant={"h5"}>{"Exchange"}</Typography>
+      <Typography variant={"body2"}>{search}</Typography>
       <Box
         display={"flex"}
         flexWrap={"wrap"}
@@ -165,9 +219,13 @@ export function ExchangePage() {
         justifyContent={"center"}
       >
         {currencies
-          .filter((x) => x.isSource)
+          .filter((x) => x.isSource && isInFilter(x))
           .map((currency) => (
-            <ExchangeItem key={currency.id} currency={currency} />
+            <ExchangeItem
+              key={currency.id}
+              currency={currency}
+              filter={search}
+            />
           ))}
       </Box>
       <Divider variant={"middle"} />
@@ -179,9 +237,9 @@ export function ExchangePage() {
         justifyContent={"center"}
       >
         {currencies
-          .filter((x) => !x.isSource)
+          .filter((x) => !x.isSource && isInFilter(x))
           .map((currency) => (
-            <SpendItem key={currency.id} currency={currency} />
+            <SpendItem key={currency.id} currency={currency} filter={search} />
           ))}
       </Box>
     </Box>
